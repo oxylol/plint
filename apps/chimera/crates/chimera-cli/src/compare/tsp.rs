@@ -342,9 +342,9 @@ pub(crate) const VOWELS: [&str; 17] = ["ɑ", "æ", "ʌ", "ə", "ɔ", "aʊ", "aɪ
 /// vowels whose F1 and F2 are measured: the stressable monophthongs (diphthongs move, and
 /// /ə ɚ/ only occur reduced)
 const MONOPHTHONGS: [&str; 10] = ["i", "ɪ", "ɛ", "æ", "ɑ", "ɔ", "ʌ", "ʊ", "u", "ɝ"];
-const STOPS: [&str; 6] = ["p", "t", "k", "b", "d", "g"];
-const SIBILANTS: [&str; 5] = ["s", "z", "ʃ", "tʃ", "dʒ"];
-const AFFRICATES: [&str; 2] = ["tʃ", "dʒ"];
+pub(crate) const STOPS: [&str; 6] = ["p", "t", "k", "b", "d", "g"];
+pub(crate) const SIBILANTS: [&str; 5] = ["s", "z", "ʃ", "tʃ", "dʒ"];
+pub(crate) const AFFRICATES: [&str; 2] = ["tʃ", "dʒ"];
 /// consonants measured (ʒ is too rare: about one per speaker)
 const CONSONANTS: [&str; 23] = [
     "p", "t", "k", "b", "d", "g", "tʃ", "dʒ", "f", "v", "θ", "ð", "s", "z", "ʃ", "h", "m", "n", "ŋ", "l", "ɹ", "w", "j",
@@ -648,7 +648,7 @@ pub struct UttMeas {
 }
 
 /// Measure one voice: the utterance measures and a token per wanted phone index.
-fn measure(tools: &Tools, sig: &Sig, phones: &[Phone], want: &[usize], female: bool) -> (UttMeas, Vec<Tok>) {
+pub(crate) fn measure(tools: &Tools, sig: &Sig, phones: &[Phone], want: &[usize], female: bool) -> (UttMeas, Vec<Tok>) {
     let total: f64 = phones.iter().map(|p| p.t1 - p.t0).sum();
     let mean_dur = total / phones.len().max(1) as f64;
     let mid_db = |p: &Phone| {

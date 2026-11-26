@@ -3,8 +3,8 @@
 //!
 //!   chimera fit <reference.json> --fields source.*,noise.* --out run/ [--cores 2] [--minutes n]
 //!               [--generations n] [--resume] [--start t.json] [--seed n] [--lambda n] [--sigma s]
-//!               [--speakers MA,MB,MC,MD,MF,MG] [--groups timbre,source,noise,pitch,motion]
-//!               [--pull λ] [--screen]
+//!               [--speakers MA,MB,MC,MD,MF,MG] [--groups timbre,source,noise,pitch,motion,consonants]
+//!               [--weights consonants=2,…] [--pull λ] [--screen]
 //!   chimera fit bench <reference.json> [--cores n]
 //!
 //! **Fields.** `--fields` is a comma-separated list of `Tuning::fields()` paths, `*` standing for
@@ -15,7 +15,10 @@
 //! **One evaluation** is the realism score of a candidate on a minibatch of `BATCH` sentences of
 //! the fitting men, plus a pull toward the start, `λ·Σ((x − x0)/range)²` (`--pull`, default
 //! `DEFAULT_PULL`): a number moves only if the judge pays for it. `--groups` keeps only those
-//! groups of the judge in the score (the mean of them). Every candidate of a generation says the
+//! groups of the judge in the score (the mean of them), and `--weights group=w,…` makes that mean
+//! a weighted one (every group 1 unless named; with all at 1 it is the judge's score to the bit).
+//! The log's `fixed` and `best_fixed` are then the weighted number; its group columns are the
+//! judge's own. Every candidate of a generation says the
 //! same sentences (no racing), two of each speaker, and the sentences rotate from generation to
 //! generation by a schedule that is a function of the seed and the generation alone.
 //! The generation's best candidate is then scored on a fixed set of `FIXED` sentences, chosen
@@ -48,7 +51,7 @@
 //!
 //! **Files in `--out`.**
 //! - `state.json`: everything a resume needs (the optimiser, the seed, the fields, the start, the
-//!   speakers, the fixed set, the best so far, the pull, the groups). `--resume` refuses when the
+//!   speakers, the fixed set, the best so far, the pull, the groups and their weights). `--resume` refuses when the
 //!   command line names a value that differs from the state's, and says which; an option left out
 //!   takes the state's.
 //! - `best.json`: a partial tuning object for `--tuning`, `CHIMERA_TUNING` or a script's
@@ -93,10 +96,12 @@ const SCREEN_KEEP: f64 = 0.01;
 const FIT_MEN: [&str; 6] = ["MA", "MB", "MC", "MD", "MF", "MG"];
 /// The held-out men: read at the Gate and nowhere else.
 const GATE_ONLY: [&str; 2] = ["MK", "ML"];
-const STATE_VERSION: u64 = 1;
-const LOG_HEAD: &str = "generation\tevaluations\tbatch_best\tbatch_mean\tfixed\tbest_fixed\ttimbre\tsource\tnoise\tpitch\tmotion\tfailed\tunmeasured\tsigma\tsentences_per_s\telapsed_s";
+/// 2 since the judge has six groups (2026-11-26): a version-1 state holds five-group numbers of
+/// another objective and its log has one column fewer, so it is refused, never read.
+const STATE_VERSION: u64 = 2;
+const LOG_HEAD: &str = "generation\tevaluations\tbatch_best\tbatch_mean\tfixed\tbest_fixed\ttimbre\tsource\tnoise\tpitch\tmotion\tconsonants\tfailed\tunmeasured\tsigma\tsentences_per_s\telapsed_s";
 
-const USAGE: &str = "usage: chimera fit <reference.json> --fields source.*,noise.* --out run/ [--cores 2] [--minutes n] [--generations n] [--resume]\n                   [--start t.json] [--seed n] [--lambda n] [--sigma s] [--speakers MA,MB,MC,MD,MF,MG]\n                   [--groups timbre,source,noise,pitch,motion] [--pull λ] [--screen]\n       chimera fit bench <reference.json> [--cores n]";
+const USAGE: &str = "usage: chimera fit <reference.json> --fields source.*,noise.* --out run/ [--cores 2] [--minutes n] [--generations n] [--resume]\n                   [--start t.json] [--seed n] [--lambda n] [--sigma s] [--speakers MA,MB,MC,MD,MF,MG]\n                   [--groups timbre,source,noise,pitch,motion,consonants] [--weights consonants=2,…] [--pull λ] [--screen]\n       chimera fit bench <reference.json> [--cores n]";
 
 #[cfg(unix)]
 unsafe extern "C" {
@@ -281,15 +286,35 @@ fn fixed_set(pools: &[Vec<Sentence>], seed: u32) -> Vec<Sentence> {
 /// the mean of `cost_of` over its scored terms (a term it gives none for is left out), then the
 /// mean of the groups. `WORST` for a failed render. With `cost_of` the term's own cost and every
 /// group this is `Score::score` to the bit.
-fn objective(score: &Score, groups: &[String], cost_of: &dyn Fn(&TermScore) -> Option<f64>) -> f64 {
-    let mut have = Vec::new();
-    for g in GROUPS.iter().filter(|g| groups.iter().any(|x| x == *g)) {
+fn objective(score: &Score, mix: &Mix, cost_of: &dyn Fn(&TermScore) -> Option<f64>) -> f64 {
+    let (mut sum, mut weight) = (0.0, 0.0);
+    for (k, g) in GROUPS.iter().enumerate().filter(|(_, g)| mix.groups.iter().any(|x| x == *g)) {
         let cs: Vec<f64> = score.terms.iter().filter(|t| t.group == *g && t.scored).filter_map(cost_of).collect();
         if !cs.is_empty() {
-            have.push(cs.iter().sum::<f64>() / cs.len() as f64);
+            sum += mix.weights[k] * (cs.iter().sum::<f64>() / cs.len() as f64);
+            weight += mix.weights[k];
         }
     }
-    if score.failed || have.is_empty() { WORST } else { have.iter().sum::<f64>() / have.len() as f64 }
+    if score.failed || !(weight > 0.0) { WORST } else { sum / weight }
+}
+
+/// Which groups of the judge a fit counts, and how much each (`--groups`, `--weights`).
+#[derive(Clone, Debug, PartialEq)]
+struct Mix {
+    groups: Vec<String>,
+    /// one per group of `GROUPS`, 1 unless `--weights` named it
+    weights: [f64; GROUPS.len()],
+}
+
+/// `--weights consonants=2,source=0.5` as one weight per group of `GROUPS` (1 for a group not named).
+fn parse_weights(spec: &str) -> Result<[f64; GROUPS.len()], String> {
+    let mut w = [1.0; GROUPS.len()];
+    for part in split(spec) {
+        let (g, v) = part.split_once('=').ok_or(format!("--weights {part}: group=weight"))?;
+        let k = GROUPS.iter().position(|x| *x == g).ok_or(format!("--weights {g}: the groups are {}", GROUPS.join(", ")))?;
+        w[k] = v.parse().ok().filter(|x: &f64| x.is_finite() && *x > 0.0).ok_or(format!("--weights {part}: a weight is a number above 0 (leave a group out with --groups)"))?;
+    }
+    Ok(w)
 }
 
 /// The scored terms a score has a cost for.
@@ -298,14 +323,14 @@ fn measured_terms(score: &Score) -> BTreeSet<String> {
 }
 
 /// A score on the fixed set: over the start's terms, one that cannot be measured costing `WORST`.
-fn fixed_objective(score: &Score, groups: &[String], start_terms: &BTreeSet<String>) -> f64 {
-    objective(score, groups, &|t| start_terms.contains(&t.name).then_some(if t.cost.is_finite() { t.cost } else { WORST }))
+fn fixed_objective(score: &Score, mix: &Mix, start_terms: &BTreeSet<String>) -> f64 {
+    objective(score, mix, &|t| start_terms.contains(&t.name).then_some(if t.cost.is_finite() { t.cost } else { WORST }))
 }
 
 /// A generation's candidates on their minibatch, before the pull: over every term any of them
 /// was measured on, a candidate without it paying the highest cost another paid; and how many
 /// such charges there were. A failed candidate reads `WORST` here.
-fn batch_objectives(scores: &[Score], groups: &[String]) -> (Vec<f64>, usize) {
+fn batch_objectives(scores: &[Score], mix: &Mix) -> (Vec<f64>, usize) {
     let mut peers: BTreeMap<&str, f64> = BTreeMap::new();
     for s in scores.iter().filter(|s| !s.failed) {
         for t in s.terms.iter().filter(|t| t.scored && t.cost.is_finite()) {
@@ -313,12 +338,12 @@ fn batch_objectives(scores: &[Score], groups: &[String]) -> (Vec<f64>, usize) {
             *e = e.max(t.cost);
         }
     }
-    let charged = |s: &Score| s.terms.iter().filter(|t| t.scored && !t.cost.is_finite() && peers.contains_key(t.name.as_str()) && groups.contains(&t.group)).count();
-    let values = scores.iter().map(|s| objective(s, groups, &|t| if t.cost.is_finite() { Some(t.cost) } else { peers.get(t.name.as_str()).copied() })).collect();
+    let charged = |s: &Score| s.terms.iter().filter(|t| t.scored && !t.cost.is_finite() && peers.contains_key(t.name.as_str()) && mix.groups.contains(&t.group)).count();
+    let values = scores.iter().map(|s| objective(s, mix, &|t| if t.cost.is_finite() { Some(t.cost) } else { peers.get(t.name.as_str()).copied() })).collect();
     (values, scores.iter().filter(|s| !s.failed).map(charged).sum())
 }
 
-fn group_values(score: &Score) -> [f64; 5] {
+fn group_values(score: &Score) -> [f64; GROUPS.len()] {
     std::array::from_fn(|k| score.groups.get(GROUPS[k]).copied().unwrap_or(f64::NAN))
 }
 
@@ -335,18 +360,18 @@ struct State {
     screened: bool,
     start: Tuning,
     speakers: Vec<String>,
-    groups: Vec<String>,
+    mix: Mix,
     pull: f64,
     sigma: f64,
     /// the fixed set's sentence ids
     fixed: Vec<String>,
     start_score: f64,
-    start_groups: [f64; 5],
+    start_groups: [f64; GROUPS.len()],
     start_terms: BTreeSet<String>,
     best_generation: usize,
     best_x: Vec<f64>,
     best_score: f64,
-    best_groups: [f64; 5],
+    best_groups: [f64; GROUPS.len()],
     /// the worst value a candidate that did not fail has had
     worst_seen: Option<f64>,
     failed: usize,
@@ -377,7 +402,8 @@ impl State {
             "screened": self.screened,
             "start": self.start,
             "speakers": self.speakers,
-            "groups": self.groups,
+            "groups": self.mix.groups,
+            "weights": self.mix.weights,
             "pull": self.pull,
             "sigma": self.sigma,
             "batch": BATCH,
@@ -399,9 +425,12 @@ impl State {
         let nan = |v: &Value| v.as_f64().unwrap_or(f64::NAN);
         let n = |v: &Value, what: &str| v.as_u64().map(|x| x as usize).ok_or(bad(what));
         let strings = |v: &Value, what: &str| -> Result<Vec<String>, String> { v.as_array().ok_or(bad(what))?.iter().map(|s| s.as_str().map(String::from).ok_or(bad(what))).collect() };
-        let five = |v: &Value, what: &str| -> Result<[f64; 5], String> { <[f64; 5]>::try_from(v.as_array().ok_or(bad(what))?.iter().map(nan).collect::<Vec<_>>()).map_err(|_| bad(what)) };
+        let per_group = |v: &Value, what: &str| -> Result<[f64; GROUPS.len()], String> { <[f64; GROUPS.len()]>::try_from(v.as_array().ok_or(bad(what))?.iter().map(nan).collect::<Vec<_>>()).map_err(|_| bad(what)) };
         if v["version"].as_u64() != Some(STATE_VERSION) {
-            return Err(format!("a fit's state of version {}, this fitter writes version {STATE_VERSION}", v["version"]));
+            return Err(format!(
+                "a fit's state of version {}, this fitter writes version {STATE_VERSION}: that run was scored by a judge with other groups (the `consonants` group came with version 2) and cannot go on; start a new run in another --out, with --start <its best.json> to go on from where it got",
+                v["version"]
+            ));
         }
         if v["batch"].as_u64() != Some(BATCH as u64) {
             return Err(format!("a fit with minibatches of {}, this fitter's are {BATCH}", v["batch"]));
@@ -414,17 +443,17 @@ impl State {
             screened: v["screened"].as_bool().ok_or(bad("screened"))?,
             start: serde_json::from_value(v["start"].clone()).map_err(|e| bad(&format!("start: {e}")))?,
             speakers: strings(&v["speakers"], "speakers")?,
-            groups: strings(&v["groups"], "groups")?,
+            mix: Mix { groups: strings(&v["groups"], "groups")?, weights: per_group(&v["weights"], "weights")? },
             pull: f(&v["pull"], "pull")?,
             sigma: f(&v["sigma"], "sigma")?,
             fixed: strings(&v["fixed"], "fixed")?,
             start_score: nan(&v["startScore"]["score"]),
-            start_groups: five(&v["startScore"]["groups"], "startScore")?,
+            start_groups: per_group(&v["startScore"]["groups"], "startScore")?,
             start_terms: strings(&v["startScore"]["terms"], "startScore")?.into_iter().collect(),
             best_generation: n(&v["best"]["generation"], "best")?,
             best_x: v["best"]["x"].as_array().ok_or(bad("best"))?.iter().map(|x| f(x, "best")).collect::<Result<_, _>>()?,
             best_score: nan(&v["best"]["score"]),
-            best_groups: five(&v["best"]["groups"], "best")?,
+            best_groups: per_group(&v["best"]["groups"], "best")?,
             worst_seen: v["worstSeen"].as_f64(),
             failed: n(&v["failed"], "failed")?,
             stall_score: nan(&v["stall"]["score"]),
@@ -450,7 +479,8 @@ impl State {
             .or_else(|| given.start.filter(|t| *t != self.start).map(|_| "--start is another tuning than the start in state.json".to_string()))
             .or_else(|| differ("--seed", &given.seed, &self.seed))
             .or_else(|| differ("--speakers", &given.speakers, &self.speakers))
-            .or_else(|| differ("--groups", &given.groups, &self.groups))
+            .or_else(|| differ("--groups", &given.groups, &self.mix.groups))
+            .or_else(|| differ("--weights", &given.weights, &self.mix.weights))
             .or_else(|| differ("--pull", &given.pull, &self.pull))
             .or_else(|| differ("--sigma", &given.sigma, &self.sigma))
             .or_else(|| differ("--lambda", &given.lambda, &self.cma.lambda()))
@@ -466,6 +496,7 @@ struct Given {
     seed: Option<u32>,
     speakers: Option<Vec<String>>,
     groups: Option<Vec<String>>,
+    weights: Option<[f64; GROUPS.len()]>,
     pull: Option<f64>,
     sigma: Option<f64>,
     lambda: Option<usize>,
@@ -545,14 +576,14 @@ fn screen(lab: &Lab, out: &str, state: &State, fields: &[&'static Field], fixed:
             }
             let (score, said) = lab.on_set(&with_values(&state.start, &[*f], &[end]), fixed, &BTreeMap::new())?;
             rendered += said;
-            row.at[e] = fixed_objective(&score, &state.groups, &state.start_terms);
+            row.at[e] = fixed_objective(&score, &state.mix, &state.start_terms);
             row.failed[e] = score.failed;
             let change = row.at[e] - state.start_score;
             if !score.failed && change.abs() > row.change.abs() {
                 row.change = change;
                 let moved = group_values(&score);
                 // the group that moved most at this end (of the groups in the score)
-                for k in (0..5).filter(|k| state.groups.iter().any(|g| g == GROUPS[*k])) {
+                for k in (0..GROUPS.len()).filter(|k| state.mix.groups.iter().any(|g| g == GROUPS[*k])) {
                     let d = moved[k] - state.start_groups[k];
                     if d.is_finite() && (row.group == "-" || d.abs() > row.group_change.abs()) {
                         (row.group, row.group_change) = (GROUPS[k], d);
@@ -644,6 +675,7 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
             "--pull" => given.pull = Some(parse("--pull", val("--pull")?)?),
             "--speakers" => given.speakers = Some(split(&val("--speakers")?)),
             "--groups" => given.groups = Some(split(&val("--groups")?)),
+            "--weights" => given.weights = Some(parse_weights(&val("--weights")?)?),
             f if f.starts_with("--") => return Err(format!("unknown option {f}\n{USAGE}")),
             _ => pos.push(x),
         }
@@ -726,7 +758,7 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
             }
         }
         let speakers = given.speakers.clone().unwrap_or_else(|| FIT_MEN.iter().map(|s| s.to_string()).collect());
-        let groups = given.groups.clone().unwrap_or_else(|| GROUPS.iter().map(|g| g.to_string()).collect());
+        let mix = Mix { groups: given.groups.clone().unwrap_or_else(|| GROUPS.iter().map(|g| g.to_string()).collect()), weights: given.weights.unwrap_or([1.0; GROUPS.len()]) };
         let seed = given.seed.unwrap_or(1);
         let sigma = given.sigma.unwrap_or(DEFAULT_SIGMA);
         let pools = pools(&speakers)?;
@@ -738,7 +770,7 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
             return Err("the start's own render failed on the fixed set: nothing to fit from".into());
         }
         let start_terms = measured_terms(&score);
-        let start_score = fixed_objective(&score, &groups, &start_terms);
+        let start_score = fixed_objective(&score, &mix, &start_terms);
         let x0: Vec<f64> = fields.iter().map(|f| (f.get)(&start)).collect();
         let cma_of = |fields: &[&'static Field]| {
             Cma::new(
@@ -754,7 +786,7 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
             screened: false,
             start,
             speakers,
-            groups,
+            mix,
             pull: given.pull.unwrap_or(DEFAULT_PULL),
             sigma,
             fixed: fixed.iter().map(|s| s.id.clone()).collect(),
@@ -796,6 +828,9 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
     let start_terms = state.start_terms.clone();
     let x0: Vec<f64> = fields.iter().map(|f| (f.get)(&state.start)).collect();
     println!("fitting {} fields, {} candidates a generation on {} sentences, {cores} threads, seed {}, pull {}", fields.len(), state.cma.lambda(), BATCH, state.seed, state.pull);
+    if state.mix.weights != [1.0; GROUPS.len()] {
+        println!("weights: {} (the fixed-set numbers are the weighted mean, not the judge's score)", GROUPS.iter().zip(&state.mix.weights).map(|(g, w)| format!("{g} {w}")).collect::<Vec<_>>().join("  "));
+    }
 
     let elapsed_before = if resume { state.elapsed } else { 0.0 };
     let stopped = loop {
@@ -817,7 +852,7 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
         let jobs: Vec<(usize, &Sentence)> = (0..tunings.len()).flat_map(|c| batch.iter().map(move |s| (c, s))).collect();
         let measured = par_map(&jobs, cores, |(c, s)| lab.scorer.measure(&tunings[*c], s))?;
         let scores: Vec<Score> = measured.chunks(batch.len()).map(|m| lab.scorer.judge(m)).collect();
-        let (raw, unmeasured) = batch_objectives(&scores, &state.groups);
+        let (raw, unmeasured) = batch_objectives(&scores, &state.mix);
         let mut values: Vec<f64> = raw.iter().zip(&xs).map(|(v, x)| v + pull(state.pull, &fields, x, &x0)).collect();
         // a blow-up gets the worst value seen so far in the run, this generation's included
         let failed = scores.iter().filter(|s| s.failed).count();
@@ -834,7 +869,7 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
         let best = (0..values.len()).min_by(|&a, &b| values[a].total_cmp(&values[b])).unwrap();
         let have: BTreeMap<&str, &SentMeas> = batch.iter().map(|s| s.id.as_str()).zip(&measured[best * batch.len()..(best + 1) * batch.len()]).collect();
         let (score, said) = lab.on_set(&tunings[best], &fixed, &have)?;
-        let on_fixed = fixed_objective(&score, &state.groups, &start_terms);
+        let on_fixed = fixed_objective(&score, &state.mix, &start_terms);
         if !score.failed && on_fixed < state.best_score {
             state.best_generation = g + 1;
             state.best_x = xs[best].clone();
@@ -1007,7 +1042,7 @@ mod tests {
 
     #[test]
     fn fit_a_term_that_cannot_be_measured_does_not_pay() {
-        let all: Vec<String> = GROUPS.iter().map(|g| g.to_string()).collect();
+        let all = Mix { groups: GROUPS.iter().map(|g| g.to_string()).collect(), weights: [1.0; GROUPS.len()] };
         let whole = score_of(vec![term("spectrum s", "timbre", 2.0), term("level s", "timbre", 1.0), term("H1-H2", "source", 3.0), term("pitch fall", "pitch", 0.5)]);
         // nothing missing: the judge's own score, to the bit, on a minibatch and on the fixed set
         let (values, charged) = batch_objectives(std::slice::from_ref(&whole), &all);
@@ -1040,9 +1075,17 @@ mod tests {
         assert_eq!(batch_objectives(&[unscored], &all).0[0], whole.score);
 
         // --groups: the mean of those groups alone
-        let two = names(&["source", "pitch"]);
+        let two = Mix { groups: names(&["source", "pitch"]), weights: [1.0; GROUPS.len()] };
         assert_eq!(batch_objectives(std::slice::from_ref(&whole), &two).0[0], (3.0 + 0.5) / 2.0);
         assert_eq!(batch_objectives(&[whole.clone(), lost.clone()], &two), (vec![1.75, 1.75], 0));
+        // --weights: a weighted mean of the groups that have terms (timbre 1.5, source 3, pitch 0.5)
+        let heavy = Mix { weights: parse_weights("source=3,motion=5").unwrap(), ..all.clone() };
+        assert_eq!(heavy.weights, [1.0, 3.0, 1.0, 1.0, 5.0, 1.0]);
+        assert_eq!(batch_objectives(std::slice::from_ref(&whole), &heavy).0[0], (1.5 + 3.0 * 3.0 + 0.5) / 5.0);
+        assert_eq!(fixed_objective(&whole, &heavy, &measured_terms(&whole)), (1.5 + 3.0 * 3.0 + 0.5) / 5.0);
+        assert_eq!(parse_weights("").unwrap(), [1.0; GROUPS.len()]);
+        assert!(parse_weights("sauce=2").unwrap_err().contains("the groups are"));
+        assert!(parse_weights("source").is_err() && parse_weights("source=0").is_err() && parse_weights("source=-1").is_err() && parse_weights("source=x").is_err());
         // a failed render is the worst whatever its terms say
         let failed = Score { failed: true, ..whole.clone() };
         assert_eq!(batch_objectives(&[failed.clone(), whole.clone()], &all).0, [WORST, whole.score]);
@@ -1067,17 +1110,17 @@ mod tests {
             screened: true,
             start,
             speakers: names(&FIT_MEN),
-            groups: names(&["source", "noise"]),
+            mix: Mix { groups: names(&["source", "noise"]), weights: [1.0, 1.0, 2.0, 1.0, 1.0, 1.0] },
             pull: DEFAULT_PULL,
             sigma: DEFAULT_SIGMA,
             fixed: names(&["01_03", "07_10"]),
             start_score: 1.0625,
-            start_groups: [0.6, 2.4, 1.5, f64::NAN, 0.1],
+            start_groups: [0.6, 2.4, 1.5, f64::NAN, 0.1, 0.9],
             start_terms: ["H1-H2, stressed", "spectrum s"].iter().map(|s| s.to_string()).collect(),
             best_generation: 2,
             best_x: cma.ask()[0].clone(),
             best_score: 0.987_654_321_012_345_6,
-            best_groups: [0.5, 2.0, 1.4, f64::NAN, 0.1],
+            best_groups: [0.5, 2.0, 1.4, f64::NAN, 0.1, 0.8],
             worst_seen: Some(1.3),
             failed: 1,
             stall_score: 1.0,
@@ -1107,6 +1150,10 @@ mod tests {
         let mut v = state.to_json();
         v["version"] = json!(99);
         assert!(State::from_json(&v).unwrap_err().contains("version 99"));
+        // a state from before the judge's sixth group is refused by its version, not misread
+        v["version"] = json!(1);
+        let old = State::from_json(&v).unwrap_err();
+        assert!(old.contains("version 1,") && old.contains("consonants") && old.contains("--start"), "{old}");
         assert!(State::from_json(&json!({ "version": STATE_VERSION, "batch": BATCH })).is_err());
     }
 
@@ -1130,7 +1177,8 @@ mod tests {
             start: Some(state.start),
             seed: Some(9),
             speakers: Some(state.speakers.clone()),
-            groups: Some(state.groups.clone()),
+            groups: Some(state.mix.groups.clone()),
+            weights: Some(state.mix.weights),
             pull: Some(DEFAULT_PULL),
             sigma: Some(DEFAULT_SIGMA),
             lambda: Some(state.cma.lambda()),
@@ -1144,6 +1192,7 @@ mod tests {
             (Given { seed: Some(10), ..same.clone() }, "--seed"),
             (Given { speakers: Some(names(&["MA", "MB"])), ..same.clone() }, "--speakers"),
             (Given { groups: Some(names(&["pitch", "motion"])), ..same.clone() }, "--groups"),
+            (Given { weights: Some([1.0; GROUPS.len()]), ..same.clone() }, "--weights"),
             (Given { pull: Some(0.02), ..same.clone() }, "--pull"),
             (Given { sigma: Some(0.3), ..same.clone() }, "--sigma"),
             (Given { lambda: Some(state.cma.lambda() + 2), ..same.clone() }, "--lambda"),

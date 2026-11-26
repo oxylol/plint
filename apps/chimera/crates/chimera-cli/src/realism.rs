@@ -1,5 +1,6 @@
 //! `chimera realism` (Plint): how far a voice is from recorded speakers on what the author's judge
-//! only advises on: timbre, the source, noise, pitch and motion. No aligner and no network: a
+//! only advises on (timbre, the source, noise, pitch and motion) and, so that a fit cannot buy
+//! those with the consonants, on the obstruents' levels. No aligner and no network: a
 //! render's phone times are the plan's (moved to where the phone sounds, `PLAN_TO_SOUND`), a recording's are the committed alignment's
 //! (`tools/tsp/alignment.tsv.gz`), and every measure is the same code for both.
 //!
@@ -9,16 +10,17 @@
 //!   chimera realism score <reference.json> --recordings <tsp-dir> --speakers MK [--json out.json]
 //!   chimera realism score <reference.json> --renders <dir> [--times mfa:<aligned-dir>] …
 //!   (--body male|female: the body that speaks, the reference's sex by default)
-//!   chimera realism offsets <reference.json> --times mfa:<aligned-dir> [--speakers …] [--jobs n]
-//!   (where the aligner hears each phone of the default voice against the plan: `PLAN_TO_SOUND`'s figures)
+//!   chimera realism offsets <reference.json> --times mfa:<aligned-dir> [--tuning t.json] [--speakers …] [--jobs n]
+//!   (where the aligner hears each phone of a voice against the plan: `PLAN_TO_SOUND`'s figures)
 //!
-//! **What is measured.** Per phone, vowels, nasals, fricatives and liquids only (a plan's times are
-//! gestures, so a stop's closure and release cannot be told apart by them, and no duration is
-//! scored: both stay with the author's judge), always over the phone's middle half:
+//! **What is measured.** Per phone, for vowels, nasals, fricatives and liquids over the phone's
+//! middle half (a plan's times are gestures, and no duration is scored: timing stays with the
+//! author's judge):
 //!
 //! - *timbre*: per phone the mean 40-band log-mel spectrum, the voice's own long-term spectrum
 //!   subtracted (the room and the microphone go with it), compared as 13 cepstral coefficients;
-//!   and each consonant's level re the utterance's stressed vowels.
+//!   and the level of each nasal, each liquid and the unstressed vowels re the utterance's
+//!   stressed vowels.
 //! - *source*: per vowel the band levels as differences between bands, H1−H2 and the cepstral
 //!   peak prominence. NOT normalised by the long-term spectrum: that would remove the very tilt
 //!   that is wrong.
@@ -28,12 +30,32 @@
 //!   last fifth, fitted fall, in semitones re the utterance's median), and the frame-to-frame step.
 //! - *motion*: per utterance the envelope's modulation spectrum (2-16 Hz), and the frame-to-frame
 //!   spectral change by phone class and over the whole utterance.
+//! - *consonants* (since version 2; the first fit made the vowels 4-6 dB louder against every
+//!   obstruent and nothing here saw it), all re the utterance's stressed vowels, and all but the
+//!   closure the author's judge's own code (`compare tsp`'s `measure`):
+//!   - each fricative's level /f v θ ð s z ʃ h/, over its middle half (these were timbre terms
+//!     in version 1; a phone's level is one term in one group);
+//!   - each affricate's level /tʃ dʒ/, over its second half (the frication);
+//!   - the spectral centroid of /s z ʃ tʃ dʒ/ (1-10 kHz, in octaves), over the same windows;
+//!   - each stop's burst /p t k b d g/: the loudest 5 ms from a third into its span to its end
+//!     (/d/ unscored);
+//!   - each stop's closure: the quietest 10 ms inside its span, at least `CLOSURE_FLOOR`
+//!     (/b d g/ unscored; /p t k/ read the floor for the men and for the voice, so they cost
+//!     nothing until a closure leaks).
+//!
+//!   The stop measures are extremes inside the span, so they hold while the span's edges move,
+//!   as long as the release is inside and the next sound is not: a recording's span is the
+//!   aligner's (closure, burst and aspiration), a render's is the plan's closure to
+//!   `STOP_RELEASE` past the planned release (`PLAN_TO_SOUND`). Not measured: the stops' own
+//!   middle-half level (the author's `level k`: with an aligner's span it is burst and
+//!   aspiration, with a plan's it is the closure, 13 dB apart on /p/), and /ʒ/ (one token in 360
+//!   sentences).
 //!
 //! **The score.** A voice is one value per term over all its sentences (a median over tokens or
 //! sentences). The reference is, per term, the median over its speakers (centre) and their MAD
 //! scaled to an SD, at least a floor of about one just-noticeable difference (unit). Cost =
-//! max(0, |gap| / unit − 1), at most `WORST`; group = mean of its terms; score = mean of the five
-//! groups. Three terms are measured and printed under `--json` but not scored (`UNSCORED`: their
+//! max(0, |gap| / unit − 1), at most `WORST`; group = mean of its terms; score = mean of the six
+//! groups. Seven terms are measured and printed under `--json` but not scored (`UNSCORED`: their
 //! cost moves with where the plan puts the phone). A term a voice has too few tokens for is left out; a source, noise or pitch term it has
 //! the tokens for but cannot be measured on (no voicing) costs `WORST`.
 //!
@@ -54,7 +76,7 @@
 //! A render with a non-finite sample, or louder than the limiter's knee for more than 5 % of its
 //! samples, makes the whole score `WORST` (`Score::failed`).
 
-use crate::compare::tsp::{BANDS, FRAME, HOP, Phone, Sig, Tools, Utt, VOWELS, cepstrum, db, is_vowel, load_utts, mad_sd, mean_square, percentile};
+use crate::compare::tsp::{AFFRICATES, BANDS, FRAME, HOP, Phone, SIBILANTS, STOPS, Sig, Tools, Utt, VOWELS, cepstrum, db, is_vowel, load_utts, mad_sd, mean_square, measure as judge_measure, percentile};
 use crate::compare::{N_CEP, N_MEL, mcd, median, read_wav};
 use crate::render::{g2p, say_with, tuning_file};
 use crate::{Ctx, FS};
@@ -68,9 +90,9 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Bump when a measure, a term, a floor or the score changes: a reference of another version is refused.
-pub const VERSION: u32 = 1;
+pub const VERSION: u32 = 2;
 /// The scored groups, one share each.
-pub const GROUPS: [&str; 5] = ["timbre", "source", "noise", "pitch", "motion"];
+pub const GROUPS: [&str; 6] = ["timbre", "source", "noise", "pitch", "motion", "consonants"];
 /// The largest cost a term can have, the cost of a term that cannot be measured, and the whole
 /// score of a render that failed.
 pub const WORST: f64 = 20.0;
@@ -105,6 +127,14 @@ const BAND_FLOOR: f64 = 1e-4;
 /// A spectrum bin this far under the frame's strongest is at the floor (the same for a render,
 /// which has no floor of its own, and a recording).
 const BIN_FLOOR: f64 = 1e-7;
+/// How far past the planned release a planned stop's span reaches (ms; `PLAN_TO_SOUND`).
+const STOP_RELEASE: f64 = 12.0;
+/// A stop's closure is its quietest stretch of this length (s).
+const CLOSURE_SECS: f64 = 0.010;
+/// A closure quieter than this (dB re the utterance's stressed vowels) reads as this: under it a
+/// recording is its room's noise (the floor sits about 47 dB under the loud level) and a render is
+/// digital silence, and neither is the voice. So "silent" is one number for both.
+const CLOSURE_FLOOR: f64 = -40.0;
 
 const TSP_NOTICE: &str = "Statistics derived from the TSP speech database, version 2 (P. Kabal, McGill University), made available under the Simplified BSD licence. \
 Copyright (c) 2018 Peter Kabal. All rights reserved. \
@@ -173,10 +203,48 @@ struct Tok {
     change: f64,
 }
 
+/// What one voice does on one stop, affricate or sibilant: the author's judge's own measures
+/// (`compare tsp`'s `measure`, the same code) and the closure. All in dB re the utterance's
+/// stressed vowels but the centroid.
+#[derive(Clone)]
+struct Con {
+    ipa: &'static str,
+    /// affricates, the judge's `level`: the second half of the span (the frication), noise floor
+    /// subtracted; NaN within 3 dB of the floor. (A fricative's level is its `Tok`'s; a stop's
+    /// middle half is not scored: see `STOP_RELEASE`.)
+    level: f64,
+    /// stops, the judge's `burst`: the loudest 5 ms from a third into the span to its end
+    burst: f64,
+    /// stops: the quietest `CLOSURE_SECS` inside the span, noise floor subtracted, at least `CLOSURE_FLOOR`
+    closure: f64,
+    /// sibilants and affricates, the judge's `centroid`: power-weighted mean frequency 1-10 kHz, here in octaves (log2 Hz)
+    centroid: f64,
+}
+
+/// A stop's closure level (dB re `vref`): the quietest `CLOSURE_SECS` (every 1 ms) inside its
+/// span, the signal's noise floor subtracted, never under `CLOSURE_FLOOR`. A minimum inside the
+/// span does not move when the span's edges do, as long as the closure is inside.
+fn closure_db(sig: &Sig, p: &Phone, vref: f64) -> f64 {
+    let seg = sig.slice(p.t0, p.t1);
+    let n = ((CLOSURE_SECS * sig.fs) as usize).min(seg.len());
+    if n == 0 || !vref.is_finite() {
+        return f64::NAN;
+    }
+    let step = (0.001 * sig.fs) as usize;
+    let mut quiet = f64::MAX;
+    let mut k = 0;
+    while k + n <= seg.len() {
+        quiet = quiet.min(mean_square(&seg[k..k + n]));
+        k += step;
+    }
+    (db((quiet - sig.noise).max(0.0)) - vref).max(CLOSURE_FLOOR)
+}
+
 /// One sentence of one voice, measured.
 #[derive(Clone)]
 pub struct SentMeas {
     toks: Vec<Tok>,
+    cons: Vec<Con>,
     /// p10, p90, range, fall, first fifth, last fifth, step; none with too few voiced frames
     pitch: Option<[f64; 7]>,
     /// the envelope's modulation (dB) in `MOD_BANDS`
@@ -189,7 +257,7 @@ pub struct SentMeas {
 
 impl SentMeas {
     fn failed() -> Self {
-        SentMeas { toks: Vec::new(), pitch: None, modulation: [f64::NAN; 3], change: [f64::NAN; 2], failed: true }
+        SentMeas { toks: Vec::new(), cons: Vec::new(), pitch: None, modulation: [f64::NAN; 3], change: [f64::NAN; 2], failed: true }
     }
 }
 
@@ -408,8 +476,21 @@ fn measure_sentence(kit: &Kit, x: &[f64], phones: &[Phone], female: bool) -> Sen
         }
         toks.push(tok);
     }
+    // stops, affricates and sibilants: the author's judge measures them, and the closure is ours
+    let want: Vec<usize> = (0..phones.len()).filter(|&i| STOPS.iter().chain(&SIBILANTS).any(|c| *c == phones[i].ipa)).collect();
+    let (_, theirs) = judge_measure(tools, &sig, phones, &want, female);
+    let cons = want
+        .iter()
+        .zip(&theirs)
+        .map(|(&i, t)| {
+            let ipa = STOPS.iter().chain(&SIBILANTS).find(|c| **c == phones[i].ipa).expect("a wanted phone");
+            let stop = STOPS.contains(ipa);
+            Con { ipa, level: t.level, burst: t.burst, closure: if stop { closure_db(&sig, &phones[i], vref) } else { f64::NAN }, centroid: t.centroid.log2() }
+        })
+        .collect();
     SentMeas {
         toks,
+        cons,
         pitch: pitch_shape(&sig.f0, t_first, t_last),
         modulation: modulation(&kit.env, &env),
         change: [percentile(&all_change, 0.5), percentile(&all_change, 0.9)],
@@ -422,8 +503,13 @@ fn measure_sentence(kit: &Kit, x: &[f64], phones: &[Phone], female: bool) -> Sen
 /// What a term reads.
 #[derive(Clone, Copy)]
 enum Take {
-    /// a consonant's level
+    /// a nasal's, a liquid's or a fricative's level (its middle half)
     Level(&'static str),
+    /// an affricate's level; a stop's burst and closure; a sibilant's or an affricate's centroid
+    ConLevel(&'static str),
+    Burst(&'static str),
+    Closure(&'static str),
+    Centroid(&'static str),
     LevelUnstressed,
     /// vowels: band k re band 0 (stressed or not)
     Tilt(usize, bool),
@@ -454,12 +540,26 @@ struct TermDef {
 /// than `0.5`, on the 180 validation sentences or the 360 fitting ones (2026-11-25, `95b7092`;
 /// `chimera realism score … --times mfa:<aligned-dir>` against the same without `--times`). A
 /// fitter chasing them would chase where the plan's window falls, not the voice. Beside each: its
-/// cost with plan times → with the aligner's, validation / fitting sentences. To put one back,
-/// measure it again both ways first.
-const UNSCORED: [(&str, &str); 3] = [
+/// cost with plan times → with the aligner's, validation / fitting sentences (all measured again
+/// 2026-11-26 with version 2). To put one back, measure it again both ways first.
+///
+/// The `consonants` terms were also compared on the first fit's voice
+/// (`tools/plint/fit/stage1-failed.json`, with its own aligned renders in the rig's `hill/fit1`),
+/// whose source is far from the default voice the offsets were measured on; those figures are in
+/// brackets. Every scored term agrees within 0.5 there too but one: `burst k` costs 1.74 with plan
+/// times against 2.24 with the aligner's on the validation sentences (0.51 apart; 1.53 against
+/// 1.97 on the fitting ones, and 0.00 against 0.00 on the default voice both times). The plan's
+/// span reads that burst 1 dB louder, so the judge charges a quiet /k/ about a quarter too
+/// little. It stays scored: the list is decided on the default voice, as before, and the term
+/// errs toward leniency on the very fault it is there to catch.
+const UNSCORED: [(&str, &str); 7] = [
     ("level v", "plan 1.65 → aligner 3.30 / 1.39 → 3.46: a planned /v/ is 60 ms, its frication a part of it the offsets do not find"),
     ("tilt 2-4k re 0-.5k, unstressed", "plan 2.69 → aligner 3.63 / 2.94 → 3.87: unstressed vowels are short and the window reaches their transitions"),
     ("change in vowels", "plan 0.00 → aligner 0.62 / 0.00 → 0.42: the change inside a vowel depends on how much transition the window holds"),
+    ("burst d", "plan 1.10 → aligner 0.00 / 0.86 → 0.00 (the first fit's voice 1.45 → 0.00 / 0.00 → 0.66): two thirds of the /d/s stand before a consonant, the aligner ends them early, and the plan's span reads the next sound 2 to 4 dB louder"),
+    ("closure b", "plan 0.00 → aligner 1.98 / 0.00 → 0.00 (the first fit's voice 6.37 → 3.25 / 0.00 → 0.00): the men's /b/ reads the floor with a unit of 1.5 dB, so a voice bar a little over the floor in one of the two spans is a cost of 2 and more"),
+    ("closure d", "plan 0.00 → aligner 0.00 / 1.07 → 0.00 (the first fit's voice 0.42 → 0.28 / 1.79 → 0.97): the aligner's /d/ is often shorter than the closure and never reaches its quietest 10 ms"),
+    ("closure g", "plan 0.52 → aligner 1.09 / 0.00 → 2.79 (the first fit's voice 0.00 → 1.21 / 0.00 → 1.26): as closure d; the plan's span reads the floor, the aligner's 4 to 6 dB over it"),
 ];
 
 /// Whether a term counts in its group (see `UNSCORED`).
@@ -473,8 +573,21 @@ const SPECTRUM_FLOOR: f64 = 1.0;
 fn term_defs() -> Vec<TermDef> {
     let mut d = Vec::new();
     let mut add = |name: String, group, take, floor, needs_voice| d.push(TermDef { name, group, take, floor, needs_voice });
-    for c in NASALS.iter().chain(&FRICATIVES).chain(&LIQUIDS) {
+    for c in NASALS.iter().chain(&LIQUIDS) {
         add(format!("level {c}"), "timbre", Take::Level(c), 1.5, false);
+    }
+    for c in &FRICATIVES {
+        add(format!("level {c}"), "consonants", Take::Level(c), 1.5, false);
+    }
+    for c in &STOPS {
+        add(format!("closure {c}"), "consonants", Take::Closure(c), 1.5, false);
+        add(format!("burst {c}"), "consonants", Take::Burst(c), 1.5, false);
+    }
+    for c in &AFFRICATES {
+        add(format!("level {c}"), "consonants", Take::ConLevel(c), 1.5, false);
+    }
+    for c in &SIBILANTS {
+        add(format!("centroid {c}"), "consonants", Take::Centroid(c), 0.07, false);
     }
     add("level unstressed vowels".into(), "timbre", Take::LevelUnstressed, 1.5, false);
     for stressed in [true, false] {
@@ -519,13 +632,19 @@ struct Values {
 
 fn values(defs: &[TermDef], ms: &[&SentMeas]) -> Values {
     let toks: Vec<&Tok> = ms.iter().flat_map(|m| m.toks.iter()).collect();
+    let cons: Vec<&Con> = ms.iter().flat_map(|m| m.cons.iter()).collect();
     let vowel = |t: &Tok, stressed: bool| t.class == 0 && t.stressed == stressed;
     let mut terms = BTreeMap::new();
     for d in defs {
         let of_toks = |f: &dyn Fn(&Tok) -> Option<f64>| -> Vec<f64> { toks.iter().filter_map(|t| f(t)).collect() };
         let of_utts = |f: &dyn Fn(&SentMeas) -> f64| -> Vec<f64> { ms.iter().map(|m| f(m)).collect() };
+        let of_cons = |c: &str, f: &dyn Fn(&Con) -> f64| -> Vec<f64> { cons.iter().filter(|t| t.ipa == c).map(|t| f(t)).collect() };
         let xs: Vec<f64> = match d.take {
             Take::Level(c) => of_toks(&|t| (t.ipa == c).then_some(t.level)),
+            Take::ConLevel(c) => of_cons(c, &|t| t.level),
+            Take::Burst(c) => of_cons(c, &|t| t.burst),
+            Take::Closure(c) => of_cons(c, &|t| t.closure),
+            Take::Centroid(c) => of_cons(c, &|t| t.centroid),
             Take::LevelUnstressed => of_toks(&|t| vowel(t, false).then_some(t.level)),
             Take::Tilt(k, s) => of_toks(&|t| vowel(t, s).then_some(t.bands[k] - t.bands[0])),
             Take::H1H2(s) => of_toks(&|t| vowel(t, s).then_some(t.h1h2)),
@@ -962,12 +1081,28 @@ fn joined_phones(plan: &[Phone], said: Option<&[String]>) -> Vec<Phone> {
 /// the fitting ones), spread thinly over a dozen spectrum and level terms, none by more than 0.4;
 /// the other groups agree within 10 % or 0.05. The middle third instead of the middle half was
 /// tried and changes nothing (0.675 against 0.577).
-const PLAN_TO_SOUND: [(&str, f64, f64); 30] = [
+///
+/// **Stops** (2026-11-26, plan-chimera-fit T3.5). A planned stop is its closure and ends at the
+/// planned release, and the burst is there: the level 5 ms at a time around it, over MA's and MB's
+/// sentences, is silent until −10 ms, peaks at 0 to +10 ms, and is then aspiration (about −16 dB
+/// for 60 ms before a vowel) or, 10 ms on, a voiced stop's vowel. The aligner ends a stop where
+/// the voice starts: 15 ms after the release for /b d g/, 20 to 30 ms in the median for /p t k/
+/// but −43 … +64 ms (10th to 90th percentile, /k/) with what follows, so no one number is its
+/// end, and the burst is a maximum: a span that reaches the next vowel reads the vowel. So a
+/// stop's start moves by the aligner's median as the other phones' do, and its end is
+/// `STOP_RELEASE` past the planned release, for all six. 12 ms was chosen among 8, 12 and the
+/// aligner's medians by how the bursts then agree with the aligner's spans, on the default voice
+/// and on the first fit's (`tools/plint/fit/stage1-failed.json`): with the medians burst b and d
+/// read 2.5 and 2 dB high on the default voice and 5 dB high on the fit's (the next vowel's
+/// onset), with 8 ms burst p reads 2.6 dB low. The affricates take the medians at both ends.
+const PLAN_TO_SOUND: [(&str, f64, f64); 38] = [
     ("ɑ", 29.5, -16.9), ("æ", 31.5, -16.1), ("ʌ", 34.8, -8.4), ("ə", 20.0, -0.1), ("ɔ", 27.1, -29.2), ("aʊ", 21.3, -15.3), ("aɪ", 31.1, -14.4), ("ɛ", 25.6, -7.1),
     ("ɝ", 23.7, -7.9), ("ɚ", 21.8, 3.8), ("eɪ", 26.1, -11.4), ("ɪ", 21.5, -5.0), ("i", 24.6, -5.9), ("oʊ", 24.8, -14.0), ("ɔɪ", 21.3, -10.4), ("ʊ", 30.0, -4.0), ("u", 49.8, -3.0),
     ("m", -2.8, 13.6), ("n", -9.2, 12.7), ("ŋ", -6.4, 10.9),
     ("f", -24.9, 31.0), ("v", 11.8, 13.9), ("θ", -29.0, 32.5), ("ð", 24.6, 20.0), ("s", -16.5, 22.3), ("z", 8.4, 16.1), ("ʃ", -6.6, 33.8), ("h", 13.0, 25.4),
     ("l", 7.9, 33.4), ("ɹ", 9.6, 9.2),
+    ("p", 1.1, STOP_RELEASE), ("t", -3.6, STOP_RELEASE), ("k", -2.0, STOP_RELEASE), ("b", 13.6, STOP_RELEASE), ("d", 16.4, STOP_RELEASE), ("g", 2.7, STOP_RELEASE),
+    ("tʃ", -5.9, 7.2), ("dʒ", 1.4, 6.8),
 ];
 
 /// A plan's phones moved to where they sound (`PLAN_TO_SOUND`); a phone never shrinks under 10 ms.
@@ -1084,7 +1219,7 @@ fn split(list: &str) -> Vec<String> {
 
 /// `chimera realism reference|score …` (the head of this file has the arguments)
 pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
-    const USAGE: &str = "usage: chimera realism reference <tsp-dir> <out.json> [--sex male] [--speakers MA,MB,…] [--jobs n]\n       chimera realism score <reference.json> [--tuning t.json] [--speakers MH,MI,MJ] [--jobs n] [--json out.json] [--limit n]\n                             [--recordings <tsp-dir> | --renders <dir>] [--times mfa:<aligned-dir>] [--body male]\n       chimera realism offsets <reference.json> --times mfa:<aligned-dir> [--speakers MA,…] [--jobs n]";
+    const USAGE: &str = "usage: chimera realism reference <tsp-dir> <out.json> [--sex male] [--speakers MA,MB,…] [--jobs n]\n       chimera realism score <reference.json> [--tuning t.json] [--speakers MH,MI,MJ] [--jobs n] [--json out.json] [--limit n]\n                             [--recordings <tsp-dir> | --renders <dir>] [--times mfa:<aligned-dir>] [--body male]\n       chimera realism offsets <reference.json> --times mfa:<aligned-dir> [--tuning t.json] [--speakers MA,…] [--jobs n]";
     let mut pos: Vec<&str> = Vec::new();
     let mut jobs = std::thread::available_parallelism().map_or(2, |n| n.get());
     let (mut sex, mut speakers, mut tuning, mut json_out, mut limit, mut recordings, mut renders, mut times, mut body) = (None, None, None, None, None, None, None, None, None);
@@ -1123,7 +1258,12 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
             let dir = times.as_deref().and_then(|t| t.strip_prefix("mfa:")).ok_or("offsets needs --times mfa:<aligned-dir>")?;
             let mut want = sentences(&speakers.unwrap_or_else(|| r.speakers.clone()))?;
             want.truncate(limit.unwrap_or(usize::MAX));
-            let pairs = par_map(&want, jobs, |s| Ok((scorer.say(&Tuning::default(), s)?.1, mfa_phones(dir, &format!("{}-{}", scorer.body, s.id))?)))?;
+            // the plan is the default's unless the tuning moves the timing; the aligned renders must be that tuning's
+            let t = match &tuning {
+                Some(p) => tuning_file(p)?,
+                None => Tuning::default(),
+            };
+            let pairs = par_map(&want, jobs, |s| Ok((scorer.say(&t, s)?.1, mfa_phones(dir, &format!("{}-{}", scorer.body, s.id))?)))?;
             let mut by: BTreeMap<String, Vec<[f64; 4]>> = BTreeMap::new();
             let mut skipped = 0;
             for (plan, mfa) in &pairs {
@@ -1325,6 +1465,7 @@ mod tests {
         let tok = |ipa, class, stressed| Tok { ipa, class, stressed, mel: Some(std::array::from_fn(|k| level + k as f64 * 0.1)), level, bands: [0.0, -3.0, -10.0, -18.0, -30.0], h1h2: -4.0, cpp: 15.0, ripple: [20.0; 3], change: 1.0 };
         SentMeas {
             toks: vec![tok("ɑ", 0, true), tok("ə", 0, false), tok("s", 2, false), tok("n", 1, false), tok("l", 3, false)],
+            cons: vec![Con { ipa: "k", level: level - 10.0, burst: level, closure: CLOSURE_FLOOR, centroid: f64::NAN }, Con { ipa: "s", level, burst: f64::NAN, closure: f64::NAN, centroid: 12.5 }],
             pitch: Some([-2.0, 2.0, 4.0, pitch, 1.0, -2.0, 0.1]),
             modulation: [-10.0; 3],
             change: [1.0, 3.0],
@@ -1361,7 +1502,7 @@ mod tests {
         let fall = off.terms.iter().find(|t| t.name == "pitch fall").unwrap();
         assert!((fall.cost - 2.0).abs() < 1e-9, "{}", fall.cost);
         assert!((off.groups["pitch"] - 2.0 / 7.0).abs() < 1e-9 && off.groups["timbre"] == 0.0);
-        assert!((off.score - 2.0 / 7.0 / 5.0).abs() < 1e-9);
+        assert!((off.score - 2.0 / 7.0 / 6.0).abs() < 1e-9);
 
         // a term on the unscored list is reported with its cost and left out of its group
         let mut loud = speaker(-4.0);
@@ -1375,7 +1516,7 @@ mod tests {
         }
         let s = score_values(&rv, &defs, &values(&defs, &loud.iter().collect::<Vec<_>>()));
         let v = s.terms.iter().find(|t| t.name == "level v").unwrap();
-        assert!(!v.scored && v.cost == 19.0 && s.groups["timbre"] == 0.0, "{} {}", v.cost, s.groups["timbre"]);
+        assert!(!v.scored && v.cost == 19.0 && s.groups["consonants"] == 0.0, "{} {}", v.cost, s.groups["consonants"]);
         assert!(s.worst(5).iter().all(|t| t.name != "level v"));
         assert!(UNSCORED.iter().all(|u| defs.iter().any(|d| d.name == u.0)), "an unscored name that is no term");
 
@@ -1399,6 +1540,89 @@ mod tests {
     }
 
     #[test]
+    fn realism_a_stops_closure_is_its_quietest_stretch_wherever_the_span_edges_fall() {
+        // silence, a vowel from 0.1 until 0.30 s, a closure with a voice bar 26 dB down until 0.36, a burst, the vowel again
+        let tone = |i: usize, amp: f64| amp * (2.0 * std::f64::consts::PI * 150.0 * i as f64 / FS).sin();
+        let voiced: Vec<f64> = (0..(0.6 * FS) as usize)
+            .map(|i| {
+                let t = i as f64 / FS;
+                if t < 0.1 { 0.0 } else if (0.30..0.36).contains(&t) { tone(i, 0.005) } else if (0.36..0.365).contains(&t) { if i % 2 == 0 { 0.03 } else { -0.03 } } else { tone(i, 0.1) }
+            })
+            .collect();
+        let sig = Sig::new(&voiced, FS, false);
+        let vref = db(0.1 * 0.1 / 2.0);
+        let stop = |t0: f64, t1: f64| Phone { ipa: "b".into(), stress: 0, t0, t1 };
+        let exact = closure_db(&sig, &stop(0.30, 0.37), vref);
+        assert!((exact + 26.0).abs() < 0.5, "{exact}");
+        // the span 25 ms early, 25 ms late, and 25 ms wider each way: the same closure
+        for (t0, t1) in [(0.275, 0.345), (0.325, 0.395), (0.275, 0.395)] {
+            assert!((closure_db(&sig, &stop(t0, t1), vref) - exact).abs() < 0.5, "{t0} {t1}: {}", closure_db(&sig, &stop(t0, t1), vref));
+        }
+        // a silent closure reads the floor, a render's digital silence and a recording's room alike
+        let silent: Vec<f64> = voiced.iter().enumerate().map(|(i, v)| if (0.30..0.36).contains(&(i as f64 / FS)) { 0.0 } else { *v }).collect();
+        assert_eq!(closure_db(&Sig::new(&silent, FS, false), &stop(0.30, 0.37), vref), CLOSURE_FLOOR);
+        let mut state: u32 = 0x9e37_79b9;
+        let room: Vec<f64> = silent
+            .iter()
+            .map(|v| {
+                state ^= state << 13;
+                state ^= state >> 17;
+                state ^= state << 5;
+                v + 0.0003 * (state as f64 / 2_147_483_648.0 - 1.0)
+            })
+            .collect();
+        assert_eq!(closure_db(&Sig::new(&room, FS, false), &stop(0.30, 0.37), vref), CLOSURE_FLOOR);
+        // a span with nothing in it, and an utterance with no vowel level: no value
+        assert!(closure_db(&sig, &stop(0.7, 0.8), vref).is_nan() && closure_db(&sig, &stop(0.30, 0.37), f64::NAN).is_nan());
+    }
+
+    #[test]
+    fn realism_the_consonants_group_holds_the_obstruents_and_each_level_lives_in_one_group() {
+        let defs = term_defs();
+        let group = |name: &str| defs.iter().find(|d| d.name == name).unwrap_or_else(|| panic!("no term {name}")).group;
+        for c in STOPS {
+            for kind in ["closure", "burst"] {
+                assert_eq!(group(&format!("{kind} {c}")), "consonants");
+            }
+            assert!(defs.iter().all(|d| d.name != format!("level {c}")), "a stop's middle half cannot be had from a plan");
+        }
+        for c in FRICATIVES.iter().chain(&AFFRICATES) {
+            assert_eq!(group(&format!("level {c}")), "consonants");
+        }
+        for c in SIBILANTS {
+            assert_eq!(group(&format!("centroid {c}")), "consonants");
+        }
+        for c in NASALS.iter().chain(&LIQUIDS) {
+            assert_eq!(group(&format!("level {c}")), "timbre");
+        }
+        // no name twice: a phone's level is one term in one group
+        let mut names: Vec<&str> = defs.iter().map(|d| d.name.as_str()).collect();
+        names.sort();
+        assert!(names.windows(2).all(|w| w[0] != w[1]));
+        assert!(defs.iter().all(|d| GROUPS.contains(&d.group)));
+
+        // a voice whose bursts are 6 dB down pays in `consonants` and nowhere else
+        let speaker = |burst: f64| -> Vec<SentMeas> {
+            (0..4)
+                .map(|i| {
+                    let mut m = sent(-10.0 + i as f64, -4.0);
+                    m.cons[0].burst = burst + i as f64;
+                    m
+                })
+                .collect()
+        };
+        let vals: BTreeMap<String, Values> = [("MA", -10.0), ("MB", -11.0), ("MC", -12.0)].iter().map(|(k, b)| (k.to_string(), values(&defs, &speaker(*b).iter().collect::<Vec<_>>()))).collect();
+        let r = reference_of("male", &defs, &vals);
+        assert_eq!((r.terms["burst k"].centre, r.terms["burst k"].unit, r.terms["burst k"].group.as_str()), (-9.5, 1.5, "consonants"));
+        assert_eq!(r.terms["closure k"].centre, CLOSURE_FLOOR);
+        assert_eq!(r.terms["centroid s"].centre, 12.5);
+        let s = score_values(&r, &defs, &values(&defs, &speaker(-17.0).iter().collect::<Vec<_>>()));
+        let burst = s.terms.iter().find(|t| t.name == "burst k").unwrap();
+        assert!((burst.cost - 3.0).abs() < 1e-9, "{}", burst.cost);
+        assert!(s.groups["consonants"] > 0.0 && GROUPS.iter().filter(|g| **g != "consonants").all(|g| s.groups[*g] == 0.0), "{:?}", s.groups);
+    }
+
+    #[test]
     fn realism_plan_segments_become_the_phones_that_were_said() {
         let ph = |ipa: &str, stress, t0: f64| Phone { ipa: ipa.into(), stress, t0, t1: t0 + 0.1 };
         // "my saw is" + "her": a diphthong, a true ɔ before ɪ, an unstressed ɝ
@@ -1416,15 +1640,18 @@ mod tests {
 
     #[test]
     fn realism_planned_phones_move_to_where_they_sound() {
-        let plan = [Phone { ipa: "ð".into(), stress: 0, t0: 1.0, t1: 1.04 }, Phone { ipa: "ɑ".into(), stress: 1, t0: 1.04, t1: 1.2 }, Phone { ipa: "t".into(), stress: 0, t0: 1.2, t1: 1.26 }, Phone { ipa: "ɔ".into(), stress: 0, t0: 2.0, t1: 2.03 }];
+        let plan = [Phone { ipa: "ð".into(), stress: 0, t0: 1.0, t1: 1.04 }, Phone { ipa: "ɑ".into(), stress: 1, t0: 1.04, t1: 1.2 }, Phone { ipa: "w".into(), stress: 0, t0: 1.2, t1: 1.26 }, Phone { ipa: "ɔ".into(), stress: 0, t0: 2.0, t1: 2.03 }, Phone { ipa: "t".into(), stress: 0, t0: 2.03, t1: 2.09 }];
         let s = sound_times(&plan);
         let near = |a: f64, b: f64| (a - b).abs() < 1e-12;
         assert!(near(s[0].t0, 1.0246) && near(s[0].t1, 1.06));
         assert!(near(s[1].t0, 1.0695) && near(s[1].t1, 1.1831));
-        // a stop has no offset; a phone the offsets would turn inside out keeps 10 ms at its new centre
+        // a glide has no offset; a phone the offsets would turn inside out keeps 10 ms at its new centre
         assert!(s[2].t0 == 1.2 && s[2].t1 == 1.26);
+        // a stop's span ends a little past the planned release, wherever the aligner would end it
+        assert!(near(s[4].t0, 2.0264) && near(s[4].t1, 2.09 + STOP_RELEASE / 1000.0));
         assert!(near(s[3].t1 - s[3].t0, 0.01) && near(0.5 * (s[3].t0 + s[3].t1), 0.5 * (2.0271 + 2.0008)));
-        assert!(PLAN_TO_SOUND.iter().all(|o| cats().contains(&o.0)) && PLAN_TO_SOUND.len() == cats().len());
+        let measured: Vec<&str> = cats().into_iter().chain(STOPS).chain(AFFRICATES).collect();
+        assert!(PLAN_TO_SOUND.iter().all(|o| measured.contains(&o.0)) && PLAN_TO_SOUND.len() == measured.len());
     }
 
     #[test]

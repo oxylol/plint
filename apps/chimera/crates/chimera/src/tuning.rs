@@ -276,11 +276,17 @@ tuning_groups! {
     /// Turbulence: the three sources of `HumanAirway::update_noise` (voice/human_airway.rs).
     noise: NoiseTuning {
         /// Aspiration's gain. human_airway.rs:195, `NoiseGains { glottis: 3.2e-6, .. }`.
-        glottis_gain, "glottisGain" = 3.2e-6, half;
+        /// Range a quarter to four times the default (±12 dB), for this and the two gains below:
+        /// a gain is a level, and half either way (−6 to +3.5 dB) was the table's default, not
+        /// physics. The first fit made the source 4-6 dB louder against every consonant and had
+        /// no room here to bring the noise up with it (plan-chimera-fit, T3.5).
+        glottis_gain, "glottisGain" = 3.2e-6, [0.8e-6, 12.8e-6];
         /// The constriction source's gain. human_airway.rs:195, `constriction: 1.364e-6`.
-        constriction_gain, "constrictionGain" = 1.364e-6, half;
+        /// Range a quarter to four times the default, as `glottisGain`.
+        constriction_gain, "constrictionGain" = 1.364e-6, [0.341e-6, 5.456e-6];
         /// The teeth source's gain. human_airway.rs:195, `teeth: 3.0e-6`.
-        teeth_gain, "teethGain" = 3.0e-6, half;
+        /// Range a quarter to four times the default, as `glottisGain`.
+        teeth_gain, "teethGain" = 3.0e-6, [0.75e-6, 12.0e-6];
         /// Top of aspiration's band (Hz). human_airway.rs:337, the first of `.band(3500.0, 300.0)`.
         aspiration_top, "aspirationTop" = 3500.0, half;
         /// The same call's 300.0, the band's bottom (Hz).

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Plint · the realism judge's own proof (`chimera realism`, crates/chimera-cli/src/realism.rs):
-# is it sound enough to be a fitter's objective? Six checks, each PASS or FAIL with its numbers;
+# is it sound enough to be a fitter's objective? Seven checks, each PASS or FAIL with its numbers;
 # the whole output is kept in the rig's hill/realism/check.txt; exit 1 if any check fails.
 #   tools/plint/realism_check.sh [--jobs 2]
-#   (about 7 minutes on 2 of Plint's cores; CHIMERA_BIN=… judges another build than target/release)
+#   (about 10 minutes on 2 of Plint's cores; CHIMERA_BIN=… judges another build than target/release)
 # (a) each fitting man against a reference of the other five reads like his peers
 # (b) the men the reference never saw (MH MI MJ, and MK ML) read like real men too
 # (c) the default voice reads clearly worse than every real man
@@ -11,10 +11,24 @@
 # (e) the same input gives the same bytes, twice and on 1 or 2 threads
 # (f) the plan's phone times and the aligner's give the same groups (needs a judge run's aligned
 #     renders of the default voice in hill/ref442; SKIP, which is not a pass, when they are absent).
-#     Timbre's bar is wider, 0.12: measured 2026-11-26 it reads 0.62 with plan times against 0.52,
+#     Timbre's bar is wider, 0.14: measured 2026-11-26 it reads 0.68 with plan times against 0.56,
 #     a small one-sided offset in a dozen terms, none over 0.4 (realism.rs, PLAN_TO_SOUND, says what
 #     was tried). It is the same for every tuning that leaves the timing alone, so a fit of the
-#     source and the noise is not led by it; the Gate's own judge uses the aligner.
+#     source and the noise is not led by it; the Gate's own judge uses the aligner. (The bar was
+#     0.12 for 0.097 while the fricatives' levels, which agree, were timbre terms: the same
+#     offsets over 35 terms instead of 42 read 0.114.)
+#     The same again for the first fit's voice (g), whose source is far from the default's, with
+#     its own aligned renders in hill/fit1 (SKIP when absent): the plan-to-sound offsets were
+#     measured on the default voice and must hold for another. Its bar is 0.15 for every group:
+#     that voice's groups are all near 0.5, where a tenth is one term of twenty moving by 1.
+#     Measured: timbre 0.07, source 0.08, noise 0.07, pitch 0.03, motion 0.04 apart, and
+#     consonants 0.49 with plan times against 0.59: the plan's spans read that voice's quiet
+#     consonants about 0.5 dB louder than the aligner's do, so the judge charges them a sixth too
+#     little (on all 360 fitting sentences 0.56 against 0.62).
+# (g) the first fit (tools/plint/fit/stage1-failed.json: stage (i) of 2026-11-26, which made the
+#     source real and let the vowels gain 4-6 dB on every consonant; the author's judge and Whisper
+#     caught it, this judge could not) reads clearly WORSE than the default on `consonants` and
+#     BETTER on `source`: the judge sees both halves of what happened.
 # Check (b) READS THE HELD-OUT MEN'S RECORDINGS (MK ML). That is allowed here and only here: it
 # asks whether the judge is sound, and tunes nothing. Only their total scores are printed and
 # kept; their per-term values are written nowhere, so no fitter can read them.
@@ -29,16 +43,20 @@ BIN="${CHIMERA_BIN:-target/release/chimera}"
 OUT="$HILL/realism"
 REF="$OUT/ref-fit6.json"
 MFA="$HILL/ref442/tsp/mfa/aligned"
+FAILED_FIT="tools/plint/fit/stage1-failed.json"
+FAILED_MFA="$HILL/fit1/tsp/mfa/aligned"
 
-# The bars, with what was measured when they were set (2026-11-26, engine 95b7092, 74 scored terms).
-MEN_MAX=1.0        # (a) every fitting man, left out in turn: measured 0.23 to 0.69
-MEN_MEDIAN=0.6     # (a) their median: measured 0.37
-UNSEEN_MAX=1.5     # (b) MH MI MJ MK ML: measured 0.08 to 0.61
-SYNTH_OVER=1.25    # (c) the default voice over the worst real man of (a) and (b): measured 1.04 / 0.69 = 1.51
-SOURCE_STEP=0.25   # (d) the `source` group must move at least this far each way: measured −1.0 and +1.2 from 2.45
+# The bars, with what was measured when they were set (2026-11-26, engine 0f0830d and the judge's
+# version 2: six groups, 89 scored terms of 96).
+MEN_MAX=1.0        # (a) every fitting man, left out in turn: measured 0.25 to 0.62
+MEN_MEDIAN=0.6     # (a) their median: measured 0.38
+UNSEEN_MAX=1.5     # (b) MH MI MJ MK ML: measured 0.09 to 0.61
+SYNTH_OVER=1.25    # (c) the default voice over the worst real man of (a) and (b): measured 0.92 / 0.62 = 1.47
+SOURCE_STEP=0.25   # (d) the `source` group must move at least this far each way: measured −1.0 and +1.2 from 2.45; (g): −1.95
 FIT_MEN="MA MB MC MD MF MG"
-# (c) to (f) say these men's sentences (120; all 360 read 1.064 where these read 1.043)
+# (c) to (g) say these men's sentences (120; all 360 read 0.927 where these read 0.917)
 SYNTH_SPEAKERS="MA,MB"
+CONSONANTS_STEP=0.15   # (g) the first fit's `consonants` group over the default's: measured +0.26 (0.49 against 0.23)
 BETTER='{"source":{"closureTension":0.6,"oqBase":0.6}}'   # sharper closure: what P1 found missing
 WORSE='{"source":{"oqBase":0.9}}'                          # a softer source still
 
@@ -52,6 +70,7 @@ done
 case "$jobs" in ''|*[!0-9]*|0) echo "realism_check.sh: --jobs needs a whole number above 0, got $jobs" >&2; exit 2 ;; esac
 [ -x "$BIN" ] || { echo "realism_check.sh: no binary at $BIN (cargo build --release -p chimera-cli, or CHIMERA_BIN=…)" >&2; exit 2; }
 [ -d "$TSP/48k" ] || { echo "realism_check.sh: no recordings in $TSP/48k" >&2; exit 2; }
+[ -f "$FAILED_FIT" ] || { echo "realism_check.sh: no $FAILED_FIT" >&2; exit 2; }
 unset CHIMERA_TUNING
 mkdir -p "$OUT"
 tmp="$(mktemp -d)"
@@ -107,7 +126,6 @@ synth="$(field "$tmp/default.json" score)"
 worst_man="$(python3 -c "print(max([$men_scores,$unseen_scores]))")"
 test_num "$synth > $SYNTH_OVER * $worst_man" && ok=0 || ok=1
 verdict $ok c "the default voice on $SYNTH_SPEAKERS's sentences reads $(printf %.3f "$synth"), the worst real man $worst_man (bar: over $SYNTH_OVER times that)"
-sed -n 3p "$tmp/default.txt"
 
 # (d)
 echo "$BETTER" > "$tmp/better.json"
@@ -127,23 +145,48 @@ done
 { cmp -s "$tmp/same-two-a.json" "$tmp/same-two-b.json" && cmp -s "$tmp/same-two-a.json" "$tmp/same-one.json" && cmp -s "$tmp/rec-1.json" "$tmp/rec-2.json"; } && ok=0 || ok=1
 verdict $ok e "30 sentences rendered twice on 2 threads and once on 1, and MA's recordings on 1 and 2: the same bytes of JSON"
 
+# (g) the first fit, before (f), which needs its score too
+"$BIN" realism score "$REF" --speakers "$SYNTH_SPEAKERS" --jobs "$jobs" --tuning "$FAILED_FIT" --json "$tmp/failed.json" > "$tmp/failed.txt"
+c0="$(field "$tmp/default.json" groups.consonants 2> /dev/null || true)"; c1="$(field "$tmp/failed.json" groups.consonants 2> /dev/null || true)"; f1="$(field "$tmp/failed.json" groups.source)"
+if [ -z "$c0" ] || [ -z "$c1" ]; then
+  verdict 1 g "the score has no \`consonants\` group: the judge cannot see what the first fit did to the consonants"
+else
+  test_num "$c1 > $c0 + $CONSONANTS_STEP and $f1 < $s0 - $SOURCE_STEP" && ok=0 || ok=1
+  verdict $ok g "$(printf 'the first fit against the default: consonants %.3f against %.3f (bar: at least %s worse), source %.3f against %.3f (bar: at least %s better)' "$c1" "$c0" "$CONSONANTS_STEP" "$f1" "$s0" "$SOURCE_STEP")"
+fi
+echo "  the default voice:"; sed -n 3,4p "$tmp/default.txt" | sed 's/^/  /'
+echo "  the first fit ($FAILED_FIT):"; sed -n 3,4p "$tmp/failed.txt" | sed 's/^/  /'
+
 # (f)
-if [ -d "$MFA" ]; then
-  "$BIN" realism score "$REF" --speakers "$SYNTH_SPEAKERS" --jobs "$jobs" --times "mfa:$MFA" --json "$tmp/mfa.json" > /dev/null
-  python3 - "$tmp/default.json" "$tmp/mfa.json" <<'EOF' && ok=0 || ok=1
+agree() { python3 - "$@" <<'EOF'
 import json, sys
 plan, mfa = (json.load(open(p))["voices"][0]["groups"] for p in sys.argv[1:3])
 bad = False
-for g in ["timbre", "source", "noise", "pitch", "motion"]:
-    room = 0.12 if g == "timbre" else max(0.1 * mfa[g], 0.05)
+for g in ["timbre", "source", "noise", "pitch", "motion", "consonants"]:
+    if g not in plan or g not in mfa:
+        bad = True
+        print(f"    {g:10} is not in the score  <-- missing")
+        continue
+    room = float(sys.argv[3]) if len(sys.argv) > 3 else 0.14 if g == "timbre" else max(0.1 * mfa[g], 0.05)
     off = abs(plan[g] - mfa[g]) > room
     bad |= off
-    print(f"    {g:7} plan times {plan[g]:.3f}  aligner's {mfa[g]:.3f}  apart {abs(plan[g] - mfa[g]):.3f} of {room:.3f} allowed{'  <-- too far' if off else ''}")
+    print(f"    {g:10} plan times {plan[g]:.3f}  aligner's {mfa[g]:.3f}  apart {abs(plan[g] - mfa[g]):.3f} of {room:.3f} allowed{'  <-- too far' if off else ''}")
 sys.exit(1 if bad else 0)
 EOF
-  verdict $ok f "plan times against the aligner's on the default voice, per group (bar: within 10 % or 0.05; timbre 0.12)"
+}
+if [ -d "$MFA" ]; then
+  "$BIN" realism score "$REF" --speakers "$SYNTH_SPEAKERS" --jobs "$jobs" --times "mfa:$MFA" --json "$tmp/mfa.json" > /dev/null
+  agree "$tmp/default.json" "$tmp/mfa.json" && ok=0 || ok=1
+  verdict $ok f "plan times against the aligner's on the default voice, per group (bar: within 10 % or 0.05; timbre 0.14)"
 else
   echo "SKIP (f) no aligned renders in $MFA (tools/plint/judge.sh makes them): plan times were NOT checked against the aligner's"
+fi
+if [ -d "$FAILED_MFA" ]; then
+  "$BIN" realism score "$REF" --speakers "$SYNTH_SPEAKERS" --jobs "$jobs" --tuning "$FAILED_FIT" --times "mfa:$FAILED_MFA" --json "$tmp/failed-mfa.json" > /dev/null
+  agree "$tmp/failed.json" "$tmp/failed-mfa.json" 0.15 && ok=0 || ok=1
+  verdict $ok f "the same on the first fit's voice (bar: within 0.15)"
+else
+  echo "SKIP (f) no aligned renders of the first fit in $FAILED_MFA: the plan-to-sound offsets were NOT checked on another voice than the default"
 fi
 
 echo "$(( $(date +%s) - started )) s"
