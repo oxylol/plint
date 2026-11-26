@@ -26,6 +26,25 @@
 //!   that is wrong.
 //! - *noise*: per vowel 4-8 kHz against 2-4 kHz, and how deep the harmonics' ripple is in three
 //!   bands (a harmonic spectrum has peaks and valleys an f0 apart, noise has none).
+//!   And, since version 3, the shape of the noise in the consonants (a fit rolled the teeth noise
+//!   off the wrong way, and nothing here heard a consonant above 8 kHz), each a band against
+//!   another of the same sound, so a shape and never a level:
+//!   - a fricative's middle half, the recording's room subtracted and nothing read under
+//!     `HISS_FLOOR`: /s z ʃ/ 8-12 kHz and 12-16 kHz re their own 4-8 kHz; /h/ 4-8 kHz and
+//!     8-12 kHz re its 1-4 kHz; /v ð/ 4-8 kHz re their 0-1 kHz (their hiss against their voice);
+//!   - the spectral peak of /s/ and /ʃ/: the loudest 500 Hz band between 1 and 12 kHz, its level
+//!     over the mean of those bands (prominence) and its centre (in octaves);
+//!   - the aspiration after /p t k/ before a stressed vowel, 4-12 kHz re 1-4 kHz. Its stretch is
+//!     found in the sound, not taken from the span's edges (`aspiration_span`): from the stop's
+//!     quietest 10 ms the voice's onset is the first two voiced pitch frames (less their lag),
+//!     the release is the first rise out of the closure, and the stretch is the last 60 % from
+//!     release to onset.
+//!
+//!   These seventeen are `noise` terms and not `consonants` ones: what moves them is the noise
+//!   sources' own spectra (`noise.*` in a tuning), as with the vowels' noise, and they move with
+//!   it (rolling the aspiration and the teeth off lowers both). In `consonants` they hid what
+//!   that group is for: the first fit's quiet consonants read 1.57 there against the default's
+//!   1.53, because its hiss happened to be a little better (0.48 against 0.22 without them).
 //! - *pitch*: per utterance the shape `tools/plint/f0_shape.py` defines (10th, 90th, first and
 //!   last fifth, fitted fall, in semitones re the utterance's median), and the frame-to-frame step.
 //! - *motion*: per utterance the envelope's modulation spectrum (2-16 Hz), and the frame-to-frame
@@ -42,6 +61,7 @@
 //!   - each stop's closure: the quietest 10 ms inside its span, at least `CLOSURE_FLOOR`
 //!     (/b d g/ unscored; /p t k/ read the floor for the men and for the voice, so they cost
 //!     nothing until a closure leaks).
+//!   - /s/'s level minus /θ/'s, one term (since version 3: the two must stay apart to be told apart).
 //!
 //!   The stop measures are extremes inside the span, so they hold while the span's edges move,
 //!   as long as the release is inside and the next sound is not: a recording's span is the
@@ -105,7 +125,7 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Bump when a measure, a term, a floor or the score changes: a reference of another version is refused.
-pub const VERSION: u32 = 2;
+pub const VERSION: u32 = 3;
 /// The scored groups, one share each.
 pub const GROUPS: [&str; 6] = ["timbre", "source", "noise", "pitch", "motion", "consonants"];
 /// The largest cost a term can have, the cost of a term that cannot be measured, and the whole
@@ -151,6 +171,28 @@ const CLOSURE_SECS: f64 = 0.010;
 /// recording is its room's noise (the floor sits about 47 dB under the loud level) and a render is
 /// digital silence, and neither is the voice. So "silent" is one number for both.
 const CLOSURE_FLOOR: f64 = -40.0;
+/// The bands a fricative's hiss is read in (Hz). The recordings and the renders are 48 kHz and the
+/// spectrum frames reach 24 kHz, so 16 kHz is inside for both.
+const HISS_BANDS: [(f64, f64); 5] = [(0.0, 1000.0), (1000.0, 4000.0), (4000.0, 8000.0), (8000.0, 12000.0), (12000.0, 16000.0)];
+const HISS_NAMES: [&str; 5] = ["0-1k", "1-4k", "4-8k", "8-12k", "12-16k"];
+/// A fricative's band quieter than this (dB re the utterance's stressed vowels) reads as this.
+/// A recording's room sits there above 8 kHz (a man's /h/ is within 3 dB of it at 8-12 kHz on a
+/// third of his tokens) and a render has no room at all, so without one number for "nothing" a
+/// voice with a properly dark /h/ would read darker than any recording can.
+const HISS_FLOOR: f64 = -45.0;
+/// A sibilant's peak is looked for in bands this wide, every `PEAK_STEP`, from `PEAK_LO` to `PEAK_HI` (Hz).
+const PEAK_BAND: f64 = 500.0;
+const PEAK_STEP: f64 = 250.0;
+const PEAK_LO: f64 = 1000.0;
+const PEAK_HI: f64 = 12000.0;
+/// The voice's onset after a stop is looked for up to this far past the stop's span (s), and never past the vowel.
+const ASPIRATION_REACH: f64 = 0.1;
+/// A release this near the voice's onset (s) is no aspiration to measure.
+const ASPIRATION_MIN: f64 = 0.025;
+/// How late a pitch frame calls the voice's onset (s).
+const VOICE_LAG: f64 = 0.015;
+/// The aspiration is the last part of release-to-onset: the burst is in the first.
+const ASPIRATION_SHARE: f64 = 0.6;
 
 const TSP_NOTICE: &str = "Statistics derived from the TSP speech database, version 2 (P. Kabal, McGill University), made available under the Simplified BSD licence. \
 Copyright (c) 2018 Peter Kabal. All rights reserved. \
@@ -217,6 +259,11 @@ struct Tok {
     ripple: [f64; 3],
     /// mean spectral change (dB per 10 ms) over the middle half
     change: f64,
+    /// fricatives: the level in each of `HISS_BANDS` over the middle half (dB re the utterance's
+    /// stressed vowels, the room's noise subtracted, at least `HISS_FLOOR`)
+    hiss: [f64; 5],
+    /// /s ʃ/: the spectral peak's prominence (dB) and its frequency (octaves, log2 Hz)
+    peak: [f64; 2],
 }
 
 /// What one voice does on one stop, affricate or sibilant: the author's judge's own measures
@@ -235,6 +282,9 @@ struct Con {
     closure: f64,
     /// sibilants and affricates, the judge's `centroid`: power-weighted mean frequency 1-10 kHz, here in octaves (log2 Hz)
     centroid: f64,
+    /// /p t k/ before a stressed vowel: the aspiration's 4-12 kHz re its 1-4 kHz (dB); NaN when
+    /// no aspiration is found (`aspiration_span`)
+    aspiration: f64,
 }
 
 /// A stop's closure level (dB re `vref`): the quietest `CLOSURE_SECS` (every 1 ms) inside its
@@ -254,6 +304,107 @@ fn closure_db(sig: &Sig, p: &Phone, vref: f64) -> f64 {
         k += step;
     }
     (db((quiet - sig.noise).max(0.0)) - vref).max(CLOSURE_FLOOR)
+}
+
+/// The room's power spectrum: the mean over the signal's quietest 20 ms stretches (its lowest
+/// twentieth, at most 16), one spectrum frame at the centre of each. All zeros for a render, whose
+/// silence is digital.
+fn room_spectrum(sig: &Sig, tools: &Tools) -> Vec<f64> {
+    let n20 = (0.02 * sig.fs) as usize;
+    let mut quiet: Vec<(f64, usize)> = sig.x.chunks(n20).enumerate().filter(|(_, c)| c.len() == n20).map(|(i, c)| (mean_square(c), i)).collect();
+    quiet.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+    quiet.truncate((quiet.len() / 20).clamp(1, 16));
+    let mut acc = vec![0.0; FRAME / 2 + 1];
+    let mut count = 0;
+    for (_, i) in &quiet {
+        let t = (*i as f64 + 0.5) * 0.02;
+        if let Some(pw) = sig.spectrum(&tools.fft, &tools.win, t, t) {
+            for (a, v) in acc.iter_mut().zip(&pw) {
+                *a += v;
+            }
+            count += 1;
+        }
+    }
+    acc.iter().map(|v| v / count.max(1) as f64).collect()
+}
+
+/// The power of a spectrum between `lo` and `hi` (Hz) with the room's taken off; a band within
+/// 3 dB of the room reads as the room (the most it can be).
+fn band_power(pw: &[f64], room: &[f64], bin: f64, lo: f64, hi: f64) -> f64 {
+    let sum = |p: &[f64]| p.iter().enumerate().filter(|(k, _)| (lo..hi).contains(&(*k as f64 * bin))).map(|(_, v)| v).sum::<f64>();
+    let (p, n) = (sum(pw), sum(room));
+    if p > 2.0 * n { p - n } else { n }
+}
+
+/// A sibilant's spectral peak: the loudest band `PEAK_BAND` wide (every `PEAK_STEP` from `PEAK_LO`
+/// to `PEAK_HI`), as its level over the mean power of those bands (dB) and its centre (octaves,
+/// log2 Hz).
+fn spectral_peak(pw: &[f64], bin: f64) -> [f64; 2] {
+    let n = ((PEAK_HI - PEAK_BAND - PEAK_LO) / PEAK_STEP).round() as usize + 1;
+    let bands: Vec<f64> = (0..n)
+        .map(|j| {
+            let lo = PEAK_LO + j as f64 * PEAK_STEP;
+            pw.iter().enumerate().filter(|(k, _)| (lo..lo + PEAK_BAND).contains(&(*k as f64 * bin))).map(|(_, v)| v).sum::<f64>()
+        })
+        .collect();
+    let mean = bands.iter().sum::<f64>() / n as f64;
+    let top = (0..n).max_by(|&a, &b| bands[a].total_cmp(&bands[b])).unwrap();
+    if !(mean > 0.0) {
+        return [f64::NAN; 2];
+    }
+    // the centre is refined by a parabola through the band's level and its neighbours' (as `harmonic_db`)
+    let mut at = top as f64;
+    if top > 0 && top + 1 < n && bands[top - 1] > 0.0 && bands[top + 1] > 0.0 {
+        let (a, b, c) = (db(bands[top - 1]), db(bands[top]), db(bands[top + 1]));
+        let den = a - 2.0 * b + c;
+        if den < 0.0 {
+            at += 0.5 * (a - c) / den;
+        }
+    }
+    [db(bands[top]) - db(mean), (PEAK_LO + at * PEAK_STEP + 0.5 * PEAK_BAND).log2()]
+}
+
+/// Where the aspiration of a voiceless stop before a vowel is, found in the sound so that it
+/// does not ride on the span's edges (an aligner ends a stop where the voice starts, give or take
+/// 50 ms; a plan ends it at the release): the closure is the quietest `CLOSURE_SECS` inside the
+/// stop's span; the voice's onset is `VOICE_LAG` before the first pitch frame after it that is
+/// voiced with the next one (a pitch frame is 36 ms long and calls an abrupt onset 10 to 15 ms
+/// late), that frame no later than `ASPIRATION_REACH` past the span or the vowel's end; the
+/// release is where the level (5 ms at a time) first passes half way, in dB, from the closure's
+/// (at least `CLOSURE_FLOOR` re `vref`) to the loudest between the closure and the onset (the
+/// loudest itself is often the aspiration's end, not the burst). The aspiration is the last
+/// `ASPIRATION_SHARE` from release to onset. None when there is no onset, nothing rises 6 dB out
+/// of the closure, or the release is under `ASPIRATION_MIN` before the onset (an unaspirated
+/// stop).
+fn aspiration_span(sig: &Sig, stop: &Phone, vowel: &Phone, vref: f64) -> Option<(f64, f64)> {
+    let seg = sig.slice(stop.t0, stop.t1);
+    let n = ((CLOSURE_SECS * sig.fs) as usize).min(seg.len());
+    if n == 0 {
+        return None;
+    }
+    let step = (0.001 * sig.fs) as usize;
+    let (mut quiet, mut at, mut k) = (f64::MAX, 0, 0);
+    while k + n <= seg.len() {
+        let ms = mean_square(&seg[k..k + n]);
+        if ms < quiet {
+            (quiet, at) = (ms, k);
+        }
+        k += step;
+    }
+    let closed = ((stop.t0 * sig.fs).max(0.0) as usize + at + n) as f64 / sig.fs;
+    let (first, last) = ((closed / 0.01).ceil() as usize, ((stop.t1 + ASPIRATION_REACH).min(vowel.t1) / 0.01).floor() as usize);
+    let voiced = |i: usize| sig.f0.get(i).is_some_and(|f| *f > 0.0);
+    let onset = (first..=last).find(|&i| voiced(i) && voiced(i + 1))? as f64 * 0.01 - VOICE_LAG;
+    let seg = sig.slice(closed, onset);
+    let n5 = (0.005 * sig.fs) as usize;
+    let levels: Vec<f64> = (0..).map(|j| j * step).take_while(|k| k + n5 <= seg.len()).map(|k| db(mean_square(&seg[k..k + n5])) - vref).collect();
+    let (from, loud) = ((db(quiet) - vref).max(CLOSURE_FLOOR), levels.iter().copied().fold(f64::MIN, f64::max));
+    if !(loud >= from + 6.0) {
+        return None;
+    }
+    let at = levels.iter().position(|l| *l > 0.5 * (from + loud))?;
+    let release = closed + (at * step + n5 / 2) as f64 / sig.fs;
+    (onset - release >= ASPIRATION_MIN).then(|| (onset - ASPIRATION_SHARE * (onset - release), onset))
 }
 
 /// One sentence of one voice, measured.
@@ -462,6 +613,10 @@ fn measure_sentence(kit: &Kit, x: &[f64], phones: &[Phone], female: bool) -> Sen
     let long_n = tools.long.n;
     let long_bin = FS / long_n as f64;
     let all = cats();
+    // a spectrum's band as a level re the stressed vowels: a band's mean square is twice its
+    // bins' sum over the frame's length and the window's energy
+    let room = room_spectrum(&sig, tools);
+    let spectrum_ref = vref + db(FRAME as f64 * tools.win.iter().map(|w| w * w).sum::<f64>() / 2.0);
     let mut toks = Vec::new();
     for p in phones {
         let (Some(class), Some(ipa)) = (class_of(&p.ipa), all.iter().find(|c| **c == p.ipa)) else { continue };
@@ -473,7 +628,13 @@ fn measure_sentence(kit: &Kit, x: &[f64], phones: &[Phone], female: bool) -> Sen
         let mel = spectrum.as_ref().filter(|_| vref.is_finite()).map(|pw| -> [f64; N_MEL] {
             std::array::from_fn(|k| (tools.mel[k].iter().map(|(i, w)| pw[*i] * w).sum::<f64>() + 1e-20).ln() - vref * std::f64::consts::LN_10 / 10.0)
         });
-        let mut tok = Tok { ipa, class, stressed: p.stress == 1, mel, level, bands: [f64::NAN; 5], h1h2: f64::NAN, cpp: f64::NAN, ripple: [f64::NAN; 3], change: change_in(a, b) };
+        let mut tok = Tok { ipa, class, stressed: p.stress == 1, mel, level, bands: [f64::NAN; 5], h1h2: f64::NAN, cpp: f64::NAN, ripple: [f64::NAN; 3], change: change_in(a, b), hiss: [f64::NAN; 5], peak: [f64::NAN; 2] };
+        if let (2, Some(pw)) = (class, &spectrum) {
+            tok.hiss = std::array::from_fn(|k| (db(band_power(pw, &room, bin, HISS_BANDS[k].0, HISS_BANDS[k].1)) - spectrum_ref).max(HISS_FLOOR));
+            if *ipa == "s" || *ipa == "ʃ" {
+                tok.peak = spectral_peak(pw, bin);
+            }
+        }
         if class == 0 {
             if let Some(pw) = &spectrum {
                 let band = |lo: f64, hi: f64| pw.iter().enumerate().filter(|(k, _)| (lo..hi).contains(&(*k as f64 * bin))).map(|(_, v)| v).sum::<f64>();
@@ -508,7 +669,14 @@ fn measure_sentence(kit: &Kit, x: &[f64], phones: &[Phone], female: bool) -> Sen
         .map(|(&i, t)| {
             let ipa = STOPS.iter().chain(&SIBILANTS).find(|c| **c == phones[i].ipa).expect("a wanted phone");
             let stop = STOPS.contains(ipa);
-            Con { ipa, level: t.level, burst: t.burst, closure: if stop { closure_db(&sig, &phones[i], vref) } else { f64::NAN }, centroid: t.centroid.log2() }
+            // the aspiration of /p t k/ before a stressed vowel
+            let aspiration = phones
+                .get(i + 1)
+                .filter(|v| ["p", "t", "k"].contains(ipa) && is_vowel(&v.ipa) && v.stress == 1)
+                .and_then(|v| aspiration_span(&sig, &phones[i], v, vref))
+                .and_then(|(a, b)| sig.spectrum(&tools.fft, &tools.win, a, b))
+                .map_or(f64::NAN, |pw| db(band_power(&pw, &room, bin, 4000.0, 12000.0)) - db(band_power(&pw, &room, bin, 1000.0, 4000.0)));
+            Con { ipa, level: t.level, burst: t.burst, closure: if stop { closure_db(&sig, &phones[i], vref) } else { f64::NAN }, centroid: t.centroid.log2(), aspiration }
         })
         .collect();
     // the absolute level: the samples' own squares over the spans `vref` is taken from, and over the speech
@@ -546,6 +714,14 @@ enum Take {
     Burst(&'static str),
     Closure(&'static str),
     Centroid(&'static str),
+    /// a fricative's band of `HISS_BANDS` re another of its own
+    Hiss(&'static str, usize, usize),
+    /// a sibilant's spectral peak: its prominence (0) or its frequency (1)
+    Peak(&'static str, usize),
+    /// the aspiration after a voiceless stop before a stressed vowel, 4-12 kHz re 1-4 kHz
+    Aspiration(&'static str),
+    /// one fricative's level less another's (each the median of its tokens)
+    LevelGap(&'static str, &'static str),
     LevelUnstressed,
     /// vowels: band k re band 0 (stressed or not)
     Tilt(usize, bool),
@@ -588,6 +764,14 @@ struct TermDef {
 /// span reads that burst 1 dB louder, so the judge charges a quiet /k/ about a quarter too
 /// little. It stays scored: the list is decided on the default voice, as before, and the term
 /// errs toward leniency on the very fault it is there to catch.
+///
+/// Version 3's eighteen terms (in `noise` the hiss's shape, the sibilants' peak and the
+/// aspiration; in `consonants` /s/ less /θ/) went through the same comparison on both voices and both sets of sentences (2026-11-26):
+/// all agree within 0.5, so none is here. On the default voice the furthest apart is `peak s,
+/// prominence` (0.81 with plan times against 0.54 on the fitting sentences); on the first fit's
+/// voice `hiss ð 4-8k re 0-1k` (0.46 against 0.00: a planned /ð/'s window holds more of its
+/// frication). The three aspiration terms differ by 0.21 at most: their stretch is found in the
+/// sound (`aspiration_span`), not taken from the span.
 const UNSCORED: [(&str, &str); 7] = [
     ("level v", "plan 1.65 → aligner 3.30 / 1.39 → 3.46: a planned /v/ is 60 ms, its frication a part of it the offsets do not find"),
     ("tilt 2-4k re 0-.5k, unstressed", "plan 2.69 → aligner 3.63 / 2.94 → 3.87: unstressed vowels are short and the window reaches their transitions"),
@@ -625,6 +809,25 @@ fn term_defs() -> Vec<TermDef> {
     for c in &SIBILANTS {
         add(format!("centroid {c}"), "consonants", Take::Centroid(c), 0.07, false);
     }
+    for c in ["s", "z", "ʃ"] {
+        for hi in [3, 4] {
+            add(format!("hiss {c} {} re {}", HISS_NAMES[hi], HISS_NAMES[2]), "noise", Take::Hiss(c, hi, 2), 1.5, false);
+        }
+    }
+    for hi in [2, 3] {
+        add(format!("hiss h {} re {}", HISS_NAMES[hi], HISS_NAMES[1]), "noise", Take::Hiss("h", hi, 1), 1.5, false);
+    }
+    for c in ["v", "ð"] {
+        add(format!("hiss {c} {} re {}", HISS_NAMES[2], HISS_NAMES[0]), "noise", Take::Hiss(c, 2, 0), 1.5, false);
+    }
+    for c in ["s", "ʃ"] {
+        add(format!("peak {c}, prominence"), "noise", Take::Peak(c, 0), 1.0, false);
+        add(format!("peak {c}, frequency"), "noise", Take::Peak(c, 1), 0.07, false);
+    }
+    for c in ["p", "t", "k"] {
+        add(format!("aspiration {c} 4-12k re 1-4k"), "noise", Take::Aspiration(c), 1.5, false);
+    }
+    add("level s minus θ".into(), "consonants", Take::LevelGap("s", "θ"), 1.5, false);
     add("level unstressed vowels".into(), "timbre", Take::LevelUnstressed, 1.5, false);
     for stressed in [true, false] {
         let s = if stressed { "stressed" } else { "unstressed" };
@@ -691,6 +894,18 @@ fn values(defs: &[TermDef], ms: &[&SentMeas]) -> Values {
             Take::Burst(c) => of_cons(c, &|t| t.burst),
             Take::Closure(c) => of_cons(c, &|t| t.closure),
             Take::Centroid(c) => of_cons(c, &|t| t.centroid),
+            Take::Hiss(c, hi, lo) => of_toks(&|t| (t.ipa == c).then_some(t.hiss[hi] - t.hiss[lo])),
+            Take::Peak(c, k) => of_toks(&|t| (t.ipa == c).then_some(t.peak[k])),
+            Take::Aspiration(c) => of_cons(c, &|t| t.aspiration),
+            Take::LevelGap(a, b) => {
+                // one value for the voice: it needs both phones' tokens
+                let of = |c: &str| of_toks(&|t| (t.ipa == c).then_some(t.level));
+                let (xa, xb) = (of(a), of(b));
+                let enough = |xs: &[f64]| xs.iter().filter(|x| x.is_finite()).count() >= MIN_TOKENS;
+                let gap = if enough(&xa) && enough(&xb) { median(&xa) - median(&xb) } else { f64::NAN };
+                terms.insert(d.name.clone(), (gap, xa.len().min(xb.len())));
+                continue;
+            }
             Take::LevelUnstressed => of_toks(&|t| vowel(t, false).then_some(t.level)),
             Take::Tilt(k, s) => of_toks(&|t| vowel(t, s).then_some(t.bands[k] - t.bands[0])),
             Take::H1H2(s) => of_toks(&|t| vowel(t, s).then_some(t.h1h2)),
@@ -828,7 +1043,9 @@ impl Reference {
         let bad = |what: &str| format!("{path}: not a realism reference ({what})");
         let version = v["version"].as_u64().ok_or(bad("no version"))? as u32;
         if version != VERSION {
-            return Err(format!("{path}: reference of version {version}, this judge is version {VERSION}: build it again"));
+            return Err(format!(
+                "{path}: a reference of version {version}, and this judge is version {VERSION} (3 added the terms above 8 kHz: the hiss's shape, the sibilants' peak, the aspiration): it has no figures for the new terms, so it is refused. Build one with this judge: chimera realism reference <tsp-dir> <out.json>"
+            ));
         }
         let sex = v["sex"].as_str().ok_or(bad("no sex"))?.to_string();
         let speakers = v["speakers"].as_array().ok_or(bad("no speakers"))?.iter().filter_map(|s| s.as_str().map(String::from)).collect();
@@ -1279,7 +1496,7 @@ fn print_score(voice: &str, s: &Score, worst: usize) {
     if worst > 0 {
         println!("  worst terms (cost: value against centre ± unit):");
         for t in s.worst(worst) {
-            println!("    {:6.2}  {:<8}{:<34} {:8.2} against {:7.2} ± {:.2}", t.cost, t.group, t.name, t.value, t.centre, t.unit);
+            println!("    {:6.2}  {:<11}{:<34} {:8.2} against {:7.2} ± {:.2}", t.cost, t.group, t.name, t.value, t.centre, t.unit);
         }
     }
 }
@@ -1533,10 +1750,10 @@ mod tests {
     }
 
     fn sent(level: f64, pitch: f64) -> SentMeas {
-        let tok = |ipa, class, stressed| Tok { ipa, class, stressed, mel: Some(std::array::from_fn(|k| level + k as f64 * 0.1)), level, bands: [0.0, -3.0, -10.0, -18.0, -30.0], h1h2: -4.0, cpp: 15.0, ripple: [20.0; 3], change: 1.0 };
+        let tok = |ipa, class, stressed| Tok { ipa, class, stressed, mel: Some(std::array::from_fn(|k| level + k as f64 * 0.1)), level, bands: [0.0, -3.0, -10.0, -18.0, -30.0], h1h2: -4.0, cpp: 15.0, ripple: [20.0; 3], change: 1.0, hiss: [-30.0, -20.0, -10.0, -15.0, -35.0], peak: [7.0, 12.4] };
         SentMeas {
             toks: vec![tok("ɑ", 0, true), tok("ə", 0, false), tok("s", 2, false), tok("n", 1, false), tok("l", 3, false)],
-            cons: vec![Con { ipa: "k", level: level - 10.0, burst: level, closure: CLOSURE_FLOOR, centroid: f64::NAN }, Con { ipa: "s", level, burst: f64::NAN, closure: f64::NAN, centroid: 12.5 }],
+            cons: vec![Con { ipa: "k", level: level - 10.0, burst: level, closure: CLOSURE_FLOOR, centroid: f64::NAN, aspiration: -8.0 }, Con { ipa: "s", level, burst: f64::NAN, closure: f64::NAN, centroid: 12.5, aspiration: f64::NAN }],
             pitch: Some([-2.0, 2.0, 4.0, pitch, 1.0, -2.0, 0.1]),
             modulation: [-10.0; 3],
             change: [1.0, 3.0],
@@ -1581,7 +1798,7 @@ mod tests {
         // a term on the unscored list is reported with its cost and left out of its group
         let mut loud = speaker(-4.0);
         for m in &mut loud {
-            m.toks.push(Tok { ipa: "v", class: 2, stressed: false, mel: None, level: 30.0, bands: [f64::NAN; 5], h1h2: f64::NAN, cpp: f64::NAN, ripple: [f64::NAN; 3], change: 1.0 });
+            m.toks.push(Tok { ipa: "v", class: 2, stressed: false, mel: None, level: 30.0, bands: [f64::NAN; 5], h1h2: f64::NAN, cpp: f64::NAN, ripple: [f64::NAN; 3], change: 1.0, hiss: [f64::NAN; 5], peak: [f64::NAN; 2] });
         }
         let with_v: BTreeMap<String, Values> = [("MA", 0.0), ("MB", 0.0)].iter().map(|(k, _)| (k.to_string(), values(&defs, &loud.iter().collect::<Vec<_>>()))).collect();
         let rv = reference_of("male", &defs, &with_v);
@@ -1679,6 +1896,14 @@ mod tests {
         for c in SIBILANTS {
             assert_eq!(group(&format!("centroid {c}")), "consonants");
         }
+        // version 3: the hiss's shape, the sibilants' peak, the aspiration, /s/ against /θ/
+        let high = ["hiss s 8-12k re 4-8k", "hiss s 12-16k re 4-8k", "hiss z 8-12k re 4-8k", "hiss z 12-16k re 4-8k", "hiss ʃ 8-12k re 4-8k", "hiss ʃ 12-16k re 4-8k", "hiss h 4-8k re 1-4k", "hiss h 8-12k re 1-4k", "hiss v 4-8k re 0-1k", "hiss ð 4-8k re 0-1k"];
+        let rest = ["peak s, prominence", "peak s, frequency", "peak ʃ, prominence", "peak ʃ, frequency", "aspiration p 4-12k re 1-4k", "aspiration t 4-12k re 1-4k", "aspiration k 4-12k re 1-4k", "level s minus θ"];
+        // the noise's shape is `noise`, as the vowels' is; a level is `consonants`
+        for name in high.iter().chain(&rest) {
+            assert_eq!(group(name), if *name == "level s minus θ" { "consonants" } else { "noise" });
+        }
+        assert_eq!((defs.iter().filter(|d| d.group == "consonants").count(), defs.iter().filter(|d| d.group == "noise").count()), (27 + 1, 8 + 17));
         for c in NASALS.iter().chain(&LIQUIDS) {
             assert_eq!(group(&format!("level {c}")), "timbre");
         }
@@ -1707,6 +1932,105 @@ mod tests {
         let burst = s.terms.iter().find(|t| t.name == "burst k").unwrap();
         assert!((burst.cost - 3.0).abs() < 1e-9, "{}", burst.cost);
         assert!(s.groups["consonants"] > 0.0 && GROUPS.iter().filter(|g| **g != "consonants").all(|g| s.groups[*g] == 0.0), "{:?}", s.groups);
+
+        // the hiss is a shape: a voice whose /s/ is 12 dB up above 12 kHz pays on that term, one
+        // whose /s/ is 12 dB up in every band pays nothing there (that is its level's to say)
+        assert_eq!((r.terms["hiss s 12-16k re 4-8k"].centre, r.terms["hiss s 12-16k re 4-8k"].unit), (-25.0, 1.5));
+        assert_eq!((r.terms["aspiration k 4-12k re 1-4k"].centre, r.terms["peak s, prominence"].centre), (-8.0, 7.0));
+        let hissing = |up: [f64; 5]| -> Score {
+            let mut ms = speaker(-11.0);
+            for t in ms.iter_mut().flat_map(|m| m.toks.iter_mut()).filter(|t| t.ipa == "s") {
+                for k in 0..5 {
+                    t.hiss[k] += up[k];
+                }
+            }
+            score_values(&r, &defs, &values(&defs, &ms.iter().collect::<Vec<_>>()))
+        };
+        let bright = hissing([0.0, 0.0, 0.0, 0.0, 12.0]);
+        let cost_of = |s: &Score, name: &str| s.terms.iter().find(|t| t.name == name).unwrap().cost;
+        assert!((cost_of(&bright, "hiss s 12-16k re 4-8k") - 7.0).abs() < 1e-9 && cost_of(&bright, "hiss s 8-12k re 4-8k") == 0.0);
+        assert!(bright.groups["noise"] > 0.0 && GROUPS.iter().filter(|g| **g != "noise").all(|g| bright.groups[*g] == 0.0));
+        assert_eq!(cost_of(&hissing([12.0; 5]), "hiss s 12-16k re 4-8k"), 0.0);
+
+        // /s/ less /θ/ is one value of the voice and needs both phones: the voices above have no /θ/
+        assert!(!r.terms.contains_key("level s minus θ"));
+        let lisping = |gap: f64| -> Vec<SentMeas> {
+            let mut ms = speaker(-11.0);
+            for m in &mut ms {
+                let s = m.toks.iter().find(|t| t.ipa == "s").unwrap().clone();
+                m.toks.push(Tok { ipa: "θ", level: s.level - gap, ..s });
+            }
+            ms
+        };
+        let vals: BTreeMap<String, Values> = [("MA", 12.0), ("MB", 13.0), ("MC", 14.0)].iter().map(|(k, g)| (k.to_string(), values(&defs, &lisping(*g).iter().collect::<Vec<_>>()))).collect();
+        let r = reference_of("male", &defs, &vals);
+        assert_eq!((r.terms["level s minus θ"].centre, r.terms["level s minus θ"].unit), (13.0, 1.5));
+        let s = score_values(&r, &defs, &values(&defs, &lisping(8.5).iter().collect::<Vec<_>>()));
+        assert!((cost_of(&s, "level s minus θ") - 2.0).abs() < 1e-9, "{}", cost_of(&s, "level s minus θ"));
+    }
+
+    #[test]
+    fn realism_a_band_has_the_room_taken_off_and_a_sibilants_peak_is_found() {
+        let bin = FS / FRAME as f64;
+        let n = FRAME / 2 + 1;
+        let room = vec![1.0; n];
+        // 4-8 kHz well over the room, 8-12 kHz within 3 dB of it, 12-16 kHz under it
+        let pw: Vec<f64> = (0..n).map(|k| match k as f64 * bin { f if f < 8000.0 => 100.0, f if f < 12000.0 => 1.5, _ => 0.2 }).collect();
+        let bins = |lo: f64, hi: f64| (0..n).filter(|k| (lo..hi).contains(&(*k as f64 * bin))).count() as f64;
+        let near = |a: f64, b: f64| (a - b).abs() < 1e-9 * b;
+        assert!(near(band_power(&pw, &room, bin, 4000.0, 8000.0), 99.0 * bins(4000.0, 8000.0)));
+        assert!(near(band_power(&pw, &room, bin, 8000.0, 12000.0), bins(8000.0, 12000.0)));
+        assert!(near(band_power(&pw, &room, bin, 12000.0, 16000.0), bins(12000.0, 16000.0)));
+        // a render has no room: the band is what it is
+        assert!(near(band_power(&pw, &vec![0.0; n], bin, 12000.0, 16000.0), 0.2 * bins(12000.0, 16000.0)));
+
+        // a flat spectrum has no peak to speak of; a hump at 5.2 kHz is found there, 500 Hz wide bands
+        let flat = spectral_peak(&vec![1.0; n], bin);
+        assert!(flat[0] < 0.5, "{flat:?}");
+        let hump: Vec<f64> = (0..n).map(|k| 1.0 + 30.0 * (-((k as f64 * bin - 5200.0) / 400.0).powi(2)).exp()).collect();
+        let peak = spectral_peak(&hump, bin);
+        assert!(peak[0] > 6.0 && (peak[1] - 5200f64.log2()).abs() < 0.03, "{peak:?} against {}", 5200f64.log2());
+        // above PEAK_HI it is not looked for, and silence has none
+        let high: Vec<f64> = (0..n).map(|k| if k as f64 * bin > 14000.0 { 100.0 } else { 1.0 }).collect();
+        assert!(spectral_peak(&high, bin)[0] < 0.5 && spectral_peak(&vec![0.0; n], bin)[0].is_nan());
+    }
+
+    #[test]
+    fn realism_the_aspiration_is_found_in_the_sound_wherever_the_span_edges_fall() {
+        // a vowel until 0.30 s, a silent closure, a burst at 0.36, hiss until the voice is back at 0.43
+        let make = |voice_at: f64| -> Vec<f64> {
+            let mut state: u32 = 0x9e37_79b9;
+            (0..(0.7 * FS) as usize)
+                .map(|i| {
+                    let t = i as f64 / FS;
+                    state ^= state << 13;
+                    state ^= state >> 17;
+                    state ^= state << 5;
+                    let noise = state as f64 / 2_147_483_648.0 - 1.0;
+                    let tone = 0.1 * (2.0 * std::f64::consts::PI * 150.0 * t).sin();
+                    if t < 0.1 { 0.0 } else if t < 0.30 { tone } else if t < 0.36 { 0.0 } else if t < 0.365 { 0.05 * noise } else if t < voice_at { 0.01 * noise } else { tone }
+                })
+                .collect()
+        };
+        let x = make(0.43);
+        let sig = Sig::new(&x, FS, false);
+        let vref = db(0.1 * 0.1 / 2.0);
+        let stop = |t0: f64, t1: f64| Phone { ipa: "t".into(), stress: 0, t0, t1 };
+        let vowel = |t0: f64| Phone { ipa: "ɑ".into(), stress: 1, t0, t1: 0.65 };
+        let (a, b) = aspiration_span(&sig, &stop(0.30, 0.372), &vowel(0.372), vref).expect("an aspirated stop");
+        // inside the hiss: after the burst, before the voice
+        assert!(a > 0.375 && a < 0.40 && b > 0.40 && b <= 0.43, "{a} {b}");
+        // a plan's span (it ends at the release), an aligner's (it ends at the voice, or 40 ms early or late), and one 25 ms early
+        for (t0, t1) in [(0.30, 0.36), (0.31, 0.43), (0.31, 0.39), (0.30, 0.47), (0.275, 0.35)] {
+            let (a2, b2) = aspiration_span(&sig, &stop(t0, t1), &vowel(t1), vref).unwrap_or_else(|| panic!("{t0} {t1}: no aspiration"));
+            assert!((a2 - a).abs() < 0.002 && (b2 - b).abs() < 1e-9, "{t0} {t1}: {a2} {b2} against {a} {b}");
+        }
+        // the voice 15 ms after the burst is no aspiration; nor is a stop with no voice after it, or no release
+        let x = make(0.375);
+        assert!(aspiration_span(&Sig::new(&x, FS, false), &stop(0.30, 0.372), &vowel(0.372), vref).is_none());
+        let silent: Vec<f64> = make(0.43).iter().enumerate().map(|(i, v)| if i as f64 / FS >= 0.43 { 0.0 } else { *v }).collect();
+        assert!(aspiration_span(&Sig::new(&silent, FS, false), &stop(0.30, 0.372), &vowel(0.372), vref).is_none());
+        assert!(aspiration_span(&sig, &stop(0.8, 0.9), &vowel(0.9), vref).is_none());
     }
 
     #[test]

@@ -129,8 +129,10 @@ const GATE_ONLY: [&str; 2] = ["MK", "ML"];
 /// 2 since the judge has six groups (2026-11-26): a version-1 state holds five-group numbers of
 /// another objective and its log has one column fewer, so it is refused, never read. 3 since the
 /// level is held (T3.6): a version-2 state has no level target, its numbers are of an objective
-/// that let the voice grow loud, and its log has two columns fewer.
-const STATE_VERSION: u64 = 3;
+/// that let the voice grow loud, and its log has two columns fewer. 4 since the judge hears the
+/// consonants above 8 kHz (its version 3, T3.7b): a version-3 state's numbers are of a
+/// `consonants` group without the hiss's shape, and its fixed set's best was never scored on it.
+const STATE_VERSION: u64 = 4;
 const LOG_HEAD: &str = "generation\tevaluations\tbatch_best\tbatch_mean\tfixed\tlevel_db\tlimited\tbest_fixed\ttimbre\tsource\tnoise\tpitch\tmotion\tconsonants\tfailed\tunmeasured\tsigma\tsentences_per_s\telapsed_s";
 
 const USAGE: &str = "usage: chimera fit <reference.json> --fields source.*,noise.* --out run/ [--cores 2] [--minutes n] [--generations n] [--resume]\n                   [--start t.json] [--seed n] [--lambda n] [--sigma s] [--speakers MA,MB,MC,MD,MF,MG]\n                   [--groups timbre,source,noise,pitch,motion,consonants] [--weights consonants=2,…] [--pull λ] [--screen]\n                   [--level-weight w] [--limit-weight w] [--level-target dB]\n       chimera fit bench <reference.json> [--cores n]";
@@ -486,7 +488,7 @@ impl State {
         let per_group = |v: &Value, what: &str| -> Result<[f64; GROUPS.len()], String> { <[f64; GROUPS.len()]>::try_from(v.as_array().ok_or(bad(what))?.iter().map(nan).collect::<Vec<_>>()).map_err(|_| bad(what)) };
         if v["version"].as_u64() != Some(STATE_VERSION) {
             return Err(format!(
-                "a fit's state of version {}, this fitter writes version {STATE_VERSION}: that run had another objective (the judge's `consonants` group came with version 2, the level's target and its hold with version 3; an older run has no level target and could grow loud) and cannot go on; start a new run in another --out, with --start <its best.json> to go on from where it got",
+                "a fit's state of version {}, this fitter writes version {STATE_VERSION}: that run had another objective (the judge's `consonants` group came with version 2, the level's target and its hold with version 3, the judge's terms above 8 kHz with version 4; an older run has no level target and could grow loud, and a version-3 run never heard the hiss) and cannot go on; start a new run in another --out, with --start <its best.json> to go on from where it got",
                 v["version"]
             ));
         }
@@ -1276,6 +1278,10 @@ mod tests {
         let mut v = state.to_json();
         v["level"] = Value::Null;
         assert!(State::from_json(&v).unwrap_err().contains("level target"));
+        // and one from before the judge heard the consonants above 8 kHz
+        v["version"] = json!(3);
+        let old = State::from_json(&v).unwrap_err();
+        assert!(old.contains("version 3,") && old.contains("never heard the hiss") && old.contains("--start"), "{old}");
         assert!(State::from_json(&json!({ "version": STATE_VERSION, "batch": BATCH })).is_err());
     }
 

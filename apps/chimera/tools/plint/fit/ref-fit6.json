@@ -5,6 +5,9 @@
     "MA": {
       "H1-H2, stressed": -4.588140658622638,
       "H1-H2, unstressed": -3.43488771915228,
+      "aspiration k 4-12k re 1-4k": -17.101529985891894,
+      "aspiration p 4-12k re 1-4k": -25.253669800672654,
+      "aspiration t 4-12k re 1-4k": -16.17329555702851,
       "burst b": -8.975302964933288,
       "burst d": -12.699976797452749,
       "burst g": -8.080705024498933,
@@ -28,6 +31,16 @@
       "closure k": -40.0,
       "closure p": -40.0,
       "closure t": -40.0,
+      "hiss h 4-8k re 1-4k": -13.349610684192907,
+      "hiss h 8-12k re 1-4k": -15.75665308309978,
+      "hiss s 12-16k re 4-8k": -28.7961174636662,
+      "hiss s 8-12k re 4-8k": -8.242088560364948,
+      "hiss v 4-8k re 0-1k": -21.972299138827214,
+      "hiss z 12-16k re 4-8k": -24.237202546709216,
+      "hiss z 8-12k re 4-8k": -8.28211985239216,
+      "hiss ð 4-8k re 0-1k": -19.518133158283653,
+      "hiss ʃ 12-16k re 4-8k": -31.08318544660575,
+      "hiss ʃ 8-12k re 4-8k": -20.245328996985155,
       "level dʒ": -15.128089779438533,
       "level f": -24.408766579530024,
       "level h": -23.44701356357175,
@@ -35,6 +48,7 @@
       "level m": -7.829921390471238,
       "level n": -9.627631684049813,
       "level s": -12.466725650310059,
+      "level s minus θ": 8.795805384865998,
       "level tʃ": -11.1348900450974,
       "level unstressed vowels": -5.549574226410353,
       "level v": -19.75214472059698,
@@ -49,6 +63,10 @@
       "modulation 8-16 Hz": -2.9904562963359047,
       "peak prominence, stressed": 26.47614651965531,
       "peak prominence, unstressed": 22.858922416342295,
+      "peak s, frequency": 12.0413776631671,
+      "peak s, prominence": 7.011765669075249,
+      "peak ʃ, frequency": 11.17225506221932,
+      "peak ʃ, prominence": 9.193051650950839,
       "pitch fall": -6.740398475677168,
       "pitch first fifth": 5.17362557147637,
       "pitch last fifth": -1.1210067403986104,
@@ -74,6 +92,9 @@
     "MB": {
       "H1-H2, stressed": -4.591432142518464,
       "H1-H2, unstressed": -5.15628020257315,
+      "aspiration k 4-12k re 1-4k": -14.68536862796805,
+      "aspiration p 4-12k re 1-4k": -19.305706995728563,
+      "aspiration t 4-12k re 1-4k": -12.347311485768746,
       "burst b": -12.065060428870563,
       "burst d": -9.544289985954023,
       "burst g": -9.660096609330651,
@@ -97,6 +118,16 @@
       "closure k": -40.0,
       "closure p": -40.0,
       "closure t": -40.0,
+      "hiss h 4-8k re 1-4k": -9.040311343709554,
+      "hiss h 8-12k re 1-4k": -15.817795737233823,
+      "hiss s 12-16k re 4-8k": -23.1160344693928,
+      "hiss s 8-12k re 4-8k": -4.285950068417984,
+      "hiss v 4-8k re 0-1k": -16.207148763428254,
+      "hiss z 12-16k re 4-8k": -22.99052358974587,
+      "hiss z 8-12k re 4-8k": -3.5144613437366132,
+      "hiss ð 4-8k re 0-1k": -16.188339429845918,
+      "hiss ʃ 12-16k re 4-8k": -24.130105921928525,
+      "hiss ʃ 8-12k re 4-8k": -10.533461815311977,
       "level dʒ": -13.883740793696202,
       "level f": -28.000455009116862,
       "level h": -19.07648013103688,
@@ -104,6 +135,7 @@
       "level m": -7.190468898964145,
       "level n": -6.798642141019435,
       "level s": -13.939515226693128,
+      "level s minus θ": 11.478957372572705,
       "level tʃ": -11.390247275026695,
       "level unstressed vowels": -3.3579442743681724,
       "level v": -22.37456733742289,
@@ -118,6 +150,10 @@
       "modulation 8-16 Hz": -3.4148856326752686,
       "peak prominence, stressed": 25.59581505860104,
       "peak prominence, unstressed": 23.35469391689794,
+      "peak s, frequency": 12.341414922351165,
+      "peak s, prominence": 6.560141709158735,
+      "peak ʃ, frequency": 11.275118605751738,
+      "peak ʃ, prominence": 10.759036687373701,
       "pitch fall": -3.7266665427270897,
       "pitch first fifth": 1.7963812716596963,
       "pitch last fifth": -1.3331126441133805,
@@ -143,6 +179,9 @@
     "MC": {
       "H1-H2, stressed": -1.7442017834534873,
       "H1-H2, unstressed": -1.5480404351823847,
+      "aspiration k 4-12k re 1-4k": -13.583582332456885,
+      "aspiration p 4-12k re 1-4k": -19.13354116248815,
+      "aspiration t 4-12k re 1-4k": -10.969194965816511,
       "burst b": -5.447064888469827,
       "burst d": -9.629466593345345,
       "burst g": -5.451273285147684,
@@ -166,6 +205,16 @@
       "closure k": -40.0,
       "closure p": -40.0,
       "closure t": -40.0,
+      "hiss h 4-8k re 1-4k": -12.639993287736536,
+      "hiss h 8-12k re 1-4k": -21.696113496828882,
+      "hiss s 12-16k re 4-8k": -25.916718463495677,
+      "hiss s 8-12k re 4-8k": -8.41440751337181,
+      "hiss v 4-8k re 0-1k": -24.387603706088882,
+      "hiss z 12-16k re 4-8k": -27.774272117357576,
+      "hiss z 8-12k re 4-8k": -11.372262168414826,
+      "hiss ð 4-8k re 0-1k": -14.002053657552032,
+      "hiss ʃ 12-16k re 4-8k": -27.30520528743289,
+      "hiss ʃ 8-12k re 4-8k": -8.922883248286109,
       "level dʒ": -9.163483840298305,
       "level f": -24.650114002463056,
       "level h": -15.748366047148417,
@@ -173,6 +222,7 @@
       "level m": -6.3182987819797205,
       "level n": -4.565667559617449,
       "level s": -8.955189334853145,
+      "level s minus θ": 20.86849034170517,
       "level tʃ": -10.824553939914964,
       "level unstressed vowels": -3.1292627414037,
       "level v": -19.379329847289572,
@@ -187,6 +237,10 @@
       "modulation 8-16 Hz": -5.205313120741598,
       "peak prominence, stressed": 22.146977101479617,
       "peak prominence, unstressed": 19.16483101899365,
+      "peak s, frequency": 12.352867515767816,
+      "peak s, prominence": 8.514457422209155,
+      "peak ʃ, frequency": 11.455109366421354,
+      "peak ʃ, prominence": 9.987658468591052,
       "pitch fall": -5.134328701672748,
       "pitch first fifth": 1.8951568941861905,
       "pitch last fifth": -1.3115455743165199,
@@ -212,6 +266,9 @@
     "MD": {
       "H1-H2, stressed": -6.207133141046567,
       "H1-H2, unstressed": -5.787136045025883,
+      "aspiration k 4-12k re 1-4k": -15.41222333805,
+      "aspiration p 4-12k re 1-4k": -16.114411664845232,
+      "aspiration t 4-12k re 1-4k": -14.805035792477149,
       "burst b": -6.748181469650115,
       "burst d": -13.983907434276155,
       "burst g": -10.802569750491898,
@@ -235,6 +292,16 @@
       "closure k": -40.0,
       "closure p": -40.0,
       "closure t": -40.0,
+      "hiss h 4-8k re 1-4k": -14.844528638000257,
+      "hiss h 8-12k re 1-4k": -21.625961459073736,
+      "hiss s 12-16k re 4-8k": -28.408682691639072,
+      "hiss s 8-12k re 4-8k": -8.866350852779394,
+      "hiss v 4-8k re 0-1k": -19.755157489876233,
+      "hiss z 12-16k re 4-8k": -30.640004823274765,
+      "hiss z 8-12k re 4-8k": -11.912426520812229,
+      "hiss ð 4-8k re 0-1k": -11.857749803870643,
+      "hiss ʃ 12-16k re 4-8k": -22.750349147616237,
+      "hiss ʃ 8-12k re 4-8k": -8.425979628985703,
       "level dʒ": -4.777210462569876,
       "level f": -21.71585741717102,
       "level h": -11.960589478698198,
@@ -242,6 +309,7 @@
       "level m": -5.832788925999019,
       "level n": -7.735953235868305,
       "level s": -6.888021550335626,
+      "level s minus θ": 14.039071698829432,
       "level tʃ": -10.874535024465855,
       "level unstressed vowels": -4.839055854203552,
       "level v": -18.98344852983913,
@@ -256,6 +324,10 @@
       "modulation 8-16 Hz": -5.83513415568583,
       "peak prominence, stressed": 24.730436101615545,
       "peak prominence, unstressed": 22.721993870877895,
+      "peak s, frequency": 12.316196778947504,
+      "peak s, prominence": 8.29316490473116,
+      "peak ʃ, frequency": 11.243453093676369,
+      "peak ʃ, prominence": 9.039485097454197,
       "pitch fall": -6.215269756120637,
       "pitch first fifth": 3.5943576556447123,
       "pitch last fifth": -1.3693833627456957,
@@ -281,6 +353,9 @@
     "MF": {
       "H1-H2, stressed": -4.04574190111893,
       "H1-H2, unstressed": -3.950985747189211,
+      "aspiration k 4-12k re 1-4k": -11.49485583542088,
+      "aspiration p 4-12k re 1-4k": -15.79645574771935,
+      "aspiration t 4-12k re 1-4k": -8.790879204201222,
       "burst b": -10.388199085032277,
       "burst d": -10.423717305482654,
       "burst g": -9.017508414432012,
@@ -304,6 +379,16 @@
       "closure k": -40.0,
       "closure p": -40.0,
       "closure t": -40.0,
+      "hiss h 4-8k re 1-4k": -11.39001511059449,
+      "hiss h 8-12k re 1-4k": -19.629358810026773,
+      "hiss s 12-16k re 4-8k": -30.409799559131592,
+      "hiss s 8-12k re 4-8k": -9.946961383637309,
+      "hiss v 4-8k re 0-1k": -14.583130838676274,
+      "hiss z 12-16k re 4-8k": -29.25183754402835,
+      "hiss z 8-12k re 4-8k": -9.87496249087802,
+      "hiss ð 4-8k re 0-1k": -12.194946236179824,
+      "hiss ʃ 12-16k re 4-8k": -28.23918023660179,
+      "hiss ʃ 8-12k re 4-8k": -12.882231122599414,
       "level dʒ": -9.581141898473,
       "level f": -21.713638513763357,
       "level h": -22.94426424457022,
@@ -311,6 +396,7 @@
       "level m": -3.935700790371719,
       "level n": -5.185189751161072,
       "level s": -8.696557035340252,
+      "level s minus θ": 16.64218624204835,
       "level tʃ": -8.586994577544791,
       "level unstressed vowels": -5.030622972313166,
       "level v": -21.616644237669114,
@@ -325,6 +411,10 @@
       "modulation 8-16 Hz": -5.746634636609603,
       "peak prominence, stressed": 25.690177769072257,
       "peak prominence, unstressed": 23.115448433241696,
+      "peak s, frequency": 12.214031003572753,
+      "peak s, prominence": 8.397376703444992,
+      "peak ʃ, frequency": 11.368008610767108,
+      "peak ʃ, prominence": 9.716754956989519,
       "pitch fall": -6.413021191367621,
       "pitch first fifth": 3.34265752434238,
       "pitch last fifth": -1.7792715215454384,
@@ -350,6 +440,9 @@
     "MG": {
       "H1-H2, stressed": -2.1471220115801017,
       "H1-H2, unstressed": -2.4445858795404956,
+      "aspiration k 4-12k re 1-4k": -11.963130702815361,
+      "aspiration p 4-12k re 1-4k": -13.071250870519842,
+      "aspiration t 4-12k re 1-4k": -6.955205724475009,
       "burst b": -11.71930952927607,
       "burst d": -10.378445664377201,
       "burst g": -9.40714460666738,
@@ -373,6 +466,16 @@
       "closure k": -40.0,
       "closure p": -40.0,
       "closure t": -40.0,
+      "hiss h 4-8k re 1-4k": -12.891907591020754,
+      "hiss h 8-12k re 1-4k": -20.70712753696242,
+      "hiss s 12-16k re 4-8k": -25.730714264281392,
+      "hiss s 8-12k re 4-8k": -1.6866447585461941,
+      "hiss v 4-8k re 0-1k": -22.476522302821365,
+      "hiss z 12-16k re 4-8k": -27.07430756740038,
+      "hiss z 8-12k re 4-8k": -5.506426228976117,
+      "hiss ð 4-8k re 0-1k": -10.14043415447021,
+      "hiss ʃ 12-16k re 4-8k": -26.74691748460986,
+      "hiss ʃ 8-12k re 4-8k": -13.090177009734997,
       "level dʒ": -9.125419261883057,
       "level f": -24.466417057799006,
       "level h": -17.713826237473313,
@@ -380,6 +483,7 @@
       "level m": -4.5389588019035685,
       "level n": -4.686419154906709,
       "level s": -7.113059862222755,
+      "level s minus θ": 13.391500771233268,
       "level tʃ": -10.8593856623273,
       "level unstressed vowels": -3.770569578361414,
       "level v": -20.634455061318526,
@@ -394,6 +498,10 @@
       "modulation 8-16 Hz": -3.758424283027897,
       "peak prominence, stressed": 25.54819579826749,
       "peak prominence, unstressed": 24.04580957065472,
+      "peak s, frequency": 12.956975707671283,
+      "peak s, prominence": 6.763275142516511,
+      "peak ʃ, frequency": 11.758603829761824,
+      "peak ʃ, prominence": 8.722170591144987,
       "pitch fall": -7.2952877360663155,
       "pitch first fifth": 3.322671174475357,
       "pitch last fifth": -2.063497144120514,
@@ -992,6 +1100,24 @@
       "speakers": 6,
       "unit": 2.0101790016641066
     },
+    "aspiration k 4-12k re 1-4k": {
+      "centre": -14.134475480212467,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 2.556812370499437
+    },
+    "aspiration p 4-12k re 1-4k": {
+      "centre": -17.62397641366669,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 2.60140795014923
+    },
+    "aspiration t 4-12k re 1-4k": {
+      "centre": -11.658253225792627,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 4.458294278888944
+    },
     "burst b": {
       "centre": -9.681751024982782,
       "group": "consonants",
@@ -1130,6 +1256,66 @@
       "speakers": 6,
       "unit": 1.5
     },
+    "hiss h 4-8k re 1-4k": {
+      "centre": -12.765950439378646,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 1.5
+    },
+    "hiss h 8-12k re 1-4k": {
+      "centre": -20.168243173494595,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 2.213216835787524
+    },
+    "hiss s 12-16k re 4-8k": {
+      "centre": -27.162700577567374,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 2.2723833917039573
+    },
+    "hiss s 8-12k re 4-8k": {
+      "centre": -8.328248036868379,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 1.5988478213946433
+    },
+    "hiss v 4-8k re 0-1k": {
+      "centre": -20.863728314351725,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 3.8078130115472986
+    },
+    "hiss z 12-16k re 4-8k": {
+      "centre": -27.424289842378975,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 3.7173489235126747
+    },
+    "hiss z 8-12k re 4-8k": {
+      "centre": -9.07854117163509,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 3.801094584257832
+    },
+    "hiss ð 4-8k re 0-1k": {
+      "centre": -13.098499946865928,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 3.1125822529053506
+    },
+    "hiss ʃ 12-16k re 4-8k": {
+      "centre": -27.026061386021375,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 3.046056789467291
+    },
+    "hiss ʃ 8-12k re 4-8k": {
+      "centre": -11.707846468955696,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 3.0892148653620612
+    },
     "level dʒ": {
       "centre": -9.372312869385652,
       "group": "consonants",
@@ -1171,6 +1357,12 @@
       "group": "consonants",
       "speakers": 6,
       "unit": 2.7062379330948367
+    },
+    "level s minus θ": {
+      "centre": 13.71528623503135,
+      "group": "consonants",
+      "speakers": 6,
+      "unit": 3.8275015609422955
     },
     "level tʃ": {
       "centre": -10.866960343396578,
@@ -1253,6 +1445,30 @@
     "peak prominence, unstressed": {
       "centre": 22.987185424791996,
       "group": "source",
+      "speakers": 6,
+      "unit": 1.0
+    },
+    "peak s, frequency": {
+      "centre": 12.328805850649335,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 0.10291950649020003
+    },
+    "peak s, prominence": {
+      "centre": 7.652465286903205,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 1.1911976029847282
+    },
+    "peak ʃ, frequency": {
+      "centre": 11.321563608259423,
+      "group": "noise",
+      "speakers": 6,
+      "unit": 0.15690079498585763
+    },
+    "peak ʃ, prominence": {
+      "centre": 9.454903303970179,
+      "group": "noise",
       "speakers": 6,
       "unit": 1.0
     },
@@ -1383,5 +1599,5 @@
       "unit": 2.127750445366717
     }
   },
-  "version": 2
+  "version": 3
 }
