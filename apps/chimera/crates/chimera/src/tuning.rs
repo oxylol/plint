@@ -456,7 +456,53 @@ tuning_groups! {
         /// How long its folds take to close (s). planner.rs:776, all three 0.03s of
         /// `if t1 - open > 0.03 { (t1 - 0.03, 0.03) } else { (open, t1 - open) }`.
         affricate_closing, "affricateClosing" = 0.03, half;
+        /// The phrase-start settle (s): the room a spoken phrase gets in front of its first
+        /// sound, for the articulators to be in place before the breath comes. 0 is the plan as it
+        /// was, to the bit; the code had no such term. planner.rs, `plan_timed`: above 0, and not
+        /// for a sung phrase or a note held open, the phrase starts this much later (`start =
+        /// o.t0 + onset_settle`, in place of `o.t0` in `let mut t = o.t0 + 0.06`, in the breath
+        /// gesture's `o.t0 + breath_at` and in the pitch line, so every span, `Plan.segments` and
+        /// `Plan.end` move with it), and of the first segment, when it is a consonant: its oral gestures (the
+        /// closure's only, of an affricate; a trill's strikes are left) start `ONSET_LEAD_SHARE`
+        /// (0.8) of the settle earlier, come in over the settle itself and at the articulators'
+        /// own speed (no `.speed()`); a voiceless one's fold gesture starts as much earlier; and
+        /// before a voiceless fricative the breath starts `ONSET_BREATH_DELAY` (0.03 s) later.
+        /// Their `t0` stays at least 0.029 s after `o.t0` (0.06 less the longest `early`, plus the
+        /// settle's other fifth); their ramps start before it, as the first vowel's does today. Why: with the breath 20 ms ahead
+        /// of a tongue still on its way, "see" starts with a low swell 26 dB under its vowel (the
+        /// recorded men: 44) and is heard as "zee" (.scratch/chimera-onset-offset.md). Range
+        /// 0..0.2; 0.1 is the value the gesture edit was measured at.
+        onset_settle, "onsetSettle" = 0.0, [0.0, 0.2];
+        /// How much longer a spoken phrase's final /b d g/ is held shut (s), so that it lets go
+        /// after the lung pressure has gone. 0 is the plan as it was. planner.rs, the `Manner::Stop`
+        /// arms of `plan_timed`: `add_oral(.., t1 + hold, ..)`, the hold being this for the last
+        /// segment when it is a voiced stop and the phrase is neither sung nor open-ended, else
+        /// 0.0. Meant to go with `finalStopBreath` ("fix 2"; 0.04 there). Range 0..0.08: 0.1
+        /// measured no different from 0.04.
+        final_stop_hold, "finalStopHold" = 0.0, [0.0, 0.08];
+        /// The share of `vot` an aspirated stop gets before an unstressed vowel (1.0 is the plan
+        /// as it was: the same before every vowel). planner.rs, the aspirated arm of `past` in
+        /// `plan_timed`: `tn.vot / rate * tn.vot_fold_share * share`, the share last and 1.0
+        /// before a stressed vowel; under 1.0 the folds' closing ramp and their opening also go
+        /// as far as that voice onset time lies from the unaspirated stop's toward the
+        /// aspirated one's. A front end's own `vot` is left as it is, and so is a sung phrase. The recorded men read 14-29 ms there, the default
+        /// 56-63. Range 0.2..1.0: at 0.24 the voice onset time is the unaspirated stop's 12 ms.
+        vot_unstressed, "votUnstressed" = 1.0, [0.2, 1.0];
     } [
+        /// A spoken phrase that ends in /b d g/ stops its breath at the stop's start +
+        /// `FINAL_STOP_BREATH` (0.02 s) instead of at the phrase's end. planner.rs, `breath_end`
+        /// in `plan_timed`. Off: the plan as it was, where the stop lets go at full lung pressure
+        /// as the exhale gesture parts the folds: a burst and 60-70 ms of hiss, heard as "red-th"
+        /// (.scratch/chimera-onset-offset.md). Not for a sung or an open-ended phrase, and not
+        /// for /p t k/, whose release the recorded men make too. Not set by `Tuning::upstream()`.
+        final_stop_breath = false;
+        /// /p t k/ before /ɹ l w j/ and a vowel are aspirated, as before a vowel (not after /s/,
+        /// and a front end's `aspirated` still wins). planner.rs, `aspirated` in `plan_timed`.
+        /// The folds then stay apart `CLUSTER_FOLDS` (1.5) times the stop's usual time past the
+        /// release, into the sonorant, whose own gestures are left: it comes out voiceless for
+        /// most of its span, as in speech (the men's voice onset there is 71-81 ms, the
+        /// default's 17-37). Not for a sung phrase. Not set by `Tuning::upstream()`.
+        cluster_aspiration = false;
         /// The author's pitch line instead of Plint's (P2, `442f784`): what `Tuning::upstream()`
         /// sets. Not in [`Tuning::fields`]: a fitter never moves it. When true the planner's
         /// intonation is its code as at `01755b5`: a straight fall in Hz from the base pitch,
@@ -736,7 +782,7 @@ mod tests {
         let mut all = Vec::new();
         leaves(&v, "", &mut all);
         let switches: Vec<&String> = all.iter().filter(|p| at(&v, p).unwrap().is_boolean()).collect();
-        assert_eq!(switches, ["prosody.upstreamLine"]);
+        assert_eq!(switches, ["prosody.clusterAspiration", "prosody.finalStopBreath", "prosody.upstreamLine"]);
         assert!(switches.iter().all(|p| Tuning::field(p).is_none()));
         all.retain(|p| !at(&v, p).unwrap().is_boolean());
         assert_eq!(all.len(), fields.len());
@@ -787,6 +833,11 @@ mod tests {
         assert_ne!(u, d);
         assert_ne!(u.prosody, d.prosody);
         assert!(u.prosody.upstream_line && !d.prosody.upstream_line);
+        // and it turns on none of Plint's later rules: they are off or neutral in both
+        for p in [u.prosody, d.prosody] {
+            assert!(!p.final_stop_breath && !p.cluster_aspiration);
+            assert_eq!((p.onset_settle, p.final_stop_hold, p.vot_unstressed), (0.0, 0.0, 1.0));
+        }
         // the switch alone is a difference, and it is in the JSON both ways
         assert_ne!(Tuning { prosody: PlannerTuning { upstream_line: true, ..d.prosody }, ..d }, d);
         let on: Tuning = serde_json::from_value(json!({"prosody": {"upstreamLine": true}})).unwrap();
