@@ -44,6 +44,7 @@ pub mod analysis {
 }
 
 pub mod util {
+    pub mod cma;
     pub mod optimize;
 }
 

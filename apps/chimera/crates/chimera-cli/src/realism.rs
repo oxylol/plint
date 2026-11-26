@@ -820,7 +820,7 @@ pub fn sentences(speakers: &[String]) -> Result<Vec<Sentence>, String> {
 
 /// `f` over `items` on `jobs` threads (the pattern of the author's `say_all`), the results in the
 /// items' order whatever the threads did.
-fn par_map<T: Sync, R: Send>(items: &[T], jobs: usize, f: impl Fn(&T) -> Result<R, String> + Sync) -> Result<Vec<R>, String> {
+pub(crate) fn par_map<T: Sync, R: Send>(items: &[T], jobs: usize, f: impl Fn(&T) -> Result<R, String> + Sync) -> Result<Vec<R>, String> {
     let next = AtomicUsize::new(0);
     let done: Mutex<Vec<Option<Result<R, String>>>> = Mutex::new(items.iter().map(|_| None).collect());
     std::thread::scope(|s| {
