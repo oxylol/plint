@@ -215,6 +215,17 @@ tuning_groups! {
         /// Time constant of the per-sample smoothing of amplitude, closure and abduction (s).
         /// glottis.rs:137, `1.0 - exp(-1.0 / (0.004 * fs))`.
         smooth_seconds, "smoothSeconds" = 0.004, half;
+        /// The voice's output level, a scale (1.0 = today's). The code had no such factor:
+        /// human_voice.rs:352, `v.output_gain *= v.tuning.source.output_level`, the last factor
+        /// of the output gain (`5.5e-7`, then the body's level ramp, then this; `x * 1.0` is `x`,
+        /// to the bit). The gain is applied at :484, `self.dec.value * self.output_gain`, before
+        /// the DC blocker and the output limiter, so turning it down takes a loud voice off the
+        /// limiter (the limiter and its 0.75 are safety limits and not tuned). It sits with
+        /// `pressure` and `amplitude`, the two source numbers that move loudness with the sound;
+        /// this one moves loudness alone. Range 0.25..4 (±12 dB): a level, which no physics
+        /// limits. The first fit came out 7.3 dB louder than the default and on the limiter,
+        /// with nothing to bring it back by (plan-chimera-fit, T3.6).
+        output_level, "outputLevel" = 1.0, [0.25, 4.0];
     }
 
     /// The tubes' walls and ports and how fast an area may change: `HumanAirway::new`
@@ -839,6 +850,8 @@ mod tests {
         assert_eq!(voice.glottis.threshold, s.threshold_cm * CM_H2O);
         assert_eq!((s.pressure, s.drift), (src.pressure, src.drift));
         assert_eq!((voice.source.pressure, g.drift), (s.pressure, s.drift));
+        // the output gain: the code's constant (no body ramp for the male) times the level
+        assert_eq!((s.output_level, voice.output_gain), (1.0, 5.5e-7));
         assert_eq!((t.noise.aspiration_order, t.noise.teeth_order), (2.0, 2.0));
         assert!(src.tension < s.closure_pressed_from && src.roughness < s.diplophonia_from);
     }

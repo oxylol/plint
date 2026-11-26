@@ -219,6 +219,8 @@ pub fn speech(ctx: &Ctx, a: &[String]) -> Result<(), String> {
 /// A sentence said by the text path: the samples and the plan.
 pub struct Spoken {
     pub out: Vec<f32>,
+    /// output samples on which the voice's limiter turned the gain down (`HumanVoice::limited_samples`)
+    pub limited: u64,
     pub plan: Plan,
     /// the IPA `render text` prints, phrases joined by " | "
     pub shown: String,
@@ -330,7 +332,7 @@ pub fn say_phrases_with(phrases: &[Phrase], body_name: &str, tuning: &Tuning) ->
     let total = js_round(FS * (plan.end + 0.3)) as usize;
     let mut out = vec![0f32; total];
     render_blocks(&mut voice, &mut out);
-    Ok(Spoken { out, plan, shown: shown.join(" | ") })
+    Ok(Spoken { out, limited: voice.limited_samples(), plan, shown: shown.join(" | ") })
 }
 
 /// A tuning file: JSON that is a partial tuning object (`{"source":{"oqBase":0.7}}`, the rest

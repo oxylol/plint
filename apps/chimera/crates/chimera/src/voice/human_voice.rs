@@ -254,6 +254,8 @@ pub struct HumanVoice {
     lim_hold: i64,
     lim_hold_n: i64,
     lim_release: f64,
+    /// output samples on which the limiter turned the gain down, since the voice was built
+    limited: u64,
     /// tissue may compress this far (cm) before the palate stops the articulator
     pub max_penetration: f64,
     /// pitch bend (ratio), on top of whatever sets the pitch
@@ -328,6 +330,7 @@ impl HumanVoice {
             lim_hold: 0,
             lim_hold_n: crate::math::js_round(0.025 * fs_out) as i64,
             lim_release: exp(-1.0 / (0.2 * fs_out)),
+            limited: 0,
             max_penetration: 0.1,
             bend: 1.0,
         };
@@ -345,6 +348,8 @@ impl HumanVoice {
         } else {
             0.875 + 0.125 * (sc - 0.9) / 0.1
         };
+        // the tuning's level, the last factor (1.0 leaves the gain as it was, to the bit)
+        v.output_gain *= v.tuning.source.output_level;
         v.apply_source();
         v
     }
@@ -352,6 +357,13 @@ impl HumanVoice {
     /// The tuning this voice was built with.
     pub fn tuning(&self) -> &Tuning {
         &self.tuning
+    }
+
+    /// How many output samples the limiter has turned down since the voice was built (its
+    /// envelope over 0.75): a voice that is too loud for its output says so here, since the
+    /// samples themselves stay at the ceiling.
+    pub fn limited_samples(&self) -> u64 {
+        self.limited
     }
 
     /// The defaults the browser uses: male body, oversampled by [`oversample_for`].
@@ -489,6 +501,7 @@ impl HumanVoice {
                     }
                     if self.lim_env > 0.75 {
                         v *= 0.75 / self.lim_env;
+                        self.limited += 1;
                     }
                     let al = v.abs();
                     if al > 0.85 {
@@ -783,5 +796,37 @@ mod tests {
         let high = octave(&t);
         assert!(high != octave(&Tuning::default()));
         assert!(high.iter().all(|x| x.is_finite()) && high.iter().any(|x| x.abs() > 0.01));
+    }
+
+    /// The output level scales the sound and nothing else, and the limiter counts its own work.
+    #[test]
+    fn the_output_level_scales_the_samples_and_the_limiter_counts_its_work() {
+        let held_voice = |t: &Tuning| {
+            let mut v = HumanVoice::with_tuning(48000.0, BODY_MALE, 2, t);
+            v.set_gate(1.0);
+            let mut out = vec![0.0f32; 24000];
+            v.render(&mut out);
+            (out, v.limited_samples())
+        };
+        let (plain, limited) = held_voice(&Tuning::default());
+        assert!(plain.iter().any(|x| x.abs() > 0.05));
+        assert_eq!(limited, 0, "the default voice touched the limiter");
+        // half the level is half of every sample, to the bit: the gain is the only thing the
+        // level touches, the DC blocker is linear, the limiter is idle in both, and a factor of
+        // two is exact in every product and sum on the way (and in the cast to f32)
+        let mut t = Tuning::default();
+        t.source.output_level = 0.5;
+        let (half, limited) = held_voice(&t);
+        assert_eq!(limited, 0);
+        assert!(plain.iter().zip(&half).all(|(a, b)| *b == 0.5 * *a));
+        // a voice too loud for its output: the samples stay under the ceiling, the count says so
+        t.source.output_level = 4.0;
+        t.source.pressure = 12.0;
+        let (loud, limited) = held_voice(&t);
+        assert!(limited > 0 && limited <= loud.len() as u64, "{limited}");
+        assert!(loud.iter().all(|x| x.abs() <= 0.86));
+        // and turned down by the level alone it is off the limiter again
+        t.source.output_level = 0.25;
+        assert_eq!(held_voice(&t).1, 0);
     }
 }

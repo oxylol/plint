@@ -5,6 +5,7 @@
 //!               [--generations n] [--resume] [--start t.json] [--seed n] [--lambda n] [--sigma s]
 //!               [--speakers MA,MB,MC,MD,MF,MG] [--groups timbre,source,noise,pitch,motion,consonants]
 //!               [--weights consonants=2,…] [--pull λ] [--screen]
+//!               [--level-weight w] [--limit-weight w] [--level-target dB]
 //!   chimera fit bench <reference.json> [--cores n]
 //!
 //! **Fields.** `--fields` is a comma-separated list of `Tuning::fields()` paths, `*` standing for
@@ -23,7 +24,20 @@
 //! generation by a schedule that is a function of the seed and the generation alone.
 //! The generation's best candidate is then scored on a fixed set of `FIXED` sentences, chosen
 //! once from the seed; `best.json` is the best so far on that fixed set, never on a minibatch,
-//! and without the pull, so that number is the judge's own.
+//! and without the pull: the judge's own number plus the level's hold (below), so the best so
+//! far is never a loud candidate.
+//!
+//! **The level is held.** The judge's terms are all relative, so nothing in its score counts how
+//! loud the voice is, and the first fit came out 7.3 dB louder than the default voice and on the
+//! output limiter (plan-chimera-fit, T3.6). So every value, on a minibatch and on the fixed set,
+//! adds `level_weight · max(0, |level − target| − 1 dB)` and `limit_weight · limited`, where
+//! `level` is the judge's `level_db` (the rms over the stressed vowels' middle halves, dBFS),
+//! `limited` the share of the samples on which the voice's limiter worked, and `target` the level
+//! of the DEFAULT tuning (never `--start`'s) on the fixed set, measured once when the run starts
+//! (`--level-target dB` names it instead). `--level-weight` is per dB, `DEFAULT_LEVEL_WEIGHT`;
+//! `--limit-weight` is per unit share, `DEFAULT_LIMIT_WEIGHT`; 0 switches either off. A minibatch's
+//! level is held to the fixed set's target: twelve sentences read within the 1 dB of the forty.
+//! The log's `level_db` and `limited` are the generation's best on the fixed set, as `fixed` is.
 //!
 //! **Small sets.** The judge's score is not a mean over sentences: the sentences' tokens are
 //! pooled and each term is a median over them, and a term with fewer than three tokens has no
@@ -40,8 +54,10 @@
 //! With nothing missing both are the judge's score to the bit. The log's `unmeasured` column
 //! counts the charges.
 //!
-//! **Blow-ups.** A candidate with a failed render (a non-finite sample, or in the limiter) gets
-//! the worst value seen so far in the run (`WORST` when there is none) and is counted in the log.
+//! **Blow-ups.** A candidate with a failed render (a non-finite sample) gets the worst value seen
+//! so far in the run (`WORST` when there is none) and is counted in the log. A candidate on the
+//! limiter is not a blow-up: it is scored and pays the limiter's hold, so the cost falls as the
+//! limiter lets go and the optimiser can find the way down.
 //!
 //! **Stopping.** `--generations n` (the run's generation count, so a resumed run goes on to n),
 //! `--minutes n` (of this invocation), or when the fixed-set best has not improved by
@@ -51,7 +67,8 @@
 //!
 //! **Files in `--out`.**
 //! - `state.json`: everything a resume needs (the optimiser, the seed, the fields, the start, the
-//!   speakers, the fixed set, the best so far, the pull, the groups and their weights). `--resume` refuses when the
+//!   speakers, the fixed set, the best so far, the pull, the groups and their weights, the level's
+//!   target and its two weights). `--resume` refuses when the
 //!   command line names a value that differs from the state's, and says which; an option left out
 //!   takes the state's.
 //! - `best.json`: a partial tuning object for `--tuning`, `CHIMERA_TUNING` or a script's
@@ -88,6 +105,19 @@ const FIXED: usize = 40;
 const DEFAULT_PULL: f64 = 0.01;
 /// The first step, as a share of each field's range: 0.15 of a ±50 % range is ±15 % of the value.
 const DEFAULT_SIGMA: f64 = 0.15;
+/// The level's hold, per dB beyond 1 dB from the target. The judge's groups read about 0.2-2.5 and
+/// the objective is their mean, about 0.5-1: with 0.1 here, 3 dB over the target costs 0.2 (as much
+/// as one of six groups moving by 1.2) and the first fit's 7.3 dB costs 0.63, more than the 0.47 it
+/// had gained on the default. Loudness itself buys the judge nothing (`source.outputLevel` moves
+/// it alone), so any weight that outbids the pull brings the level back; this one does it in a
+/// few generations without flattening the objective around the target.
+const DEFAULT_LEVEL_WEIGHT: f64 = 0.1;
+/// The limiter's hold, per unit share of the samples: 1 % of the samples limited costs 0.2, and
+/// the first fit's 42 % (its limiter's envelope stays up 25 ms and more after every peak over
+/// 0.75) costs 8, far over anything the judge can pay back.
+const DEFAULT_LIMIT_WEIGHT: f64 = 20.0;
+/// The level may sit this far (dB) either side of the target at no cost.
+const LEVEL_FREE_DB: f64 = 1.0;
 const STALL_GENERATIONS: usize = 30;
 const STALL_GAIN: f64 = 0.01;
 /// `--screen` keeps a field whose larger change is at least this share of the largest one's.
@@ -97,11 +127,13 @@ const FIT_MEN: [&str; 6] = ["MA", "MB", "MC", "MD", "MF", "MG"];
 /// The held-out men: read at the Gate and nowhere else.
 const GATE_ONLY: [&str; 2] = ["MK", "ML"];
 /// 2 since the judge has six groups (2026-11-26): a version-1 state holds five-group numbers of
-/// another objective and its log has one column fewer, so it is refused, never read.
-const STATE_VERSION: u64 = 2;
-const LOG_HEAD: &str = "generation\tevaluations\tbatch_best\tbatch_mean\tfixed\tbest_fixed\ttimbre\tsource\tnoise\tpitch\tmotion\tconsonants\tfailed\tunmeasured\tsigma\tsentences_per_s\telapsed_s";
+/// another objective and its log has one column fewer, so it is refused, never read. 3 since the
+/// level is held (T3.6): a version-2 state has no level target, its numbers are of an objective
+/// that let the voice grow loud, and its log has two columns fewer.
+const STATE_VERSION: u64 = 3;
+const LOG_HEAD: &str = "generation\tevaluations\tbatch_best\tbatch_mean\tfixed\tlevel_db\tlimited\tbest_fixed\ttimbre\tsource\tnoise\tpitch\tmotion\tconsonants\tfailed\tunmeasured\tsigma\tsentences_per_s\telapsed_s";
 
-const USAGE: &str = "usage: chimera fit <reference.json> --fields source.*,noise.* --out run/ [--cores 2] [--minutes n] [--generations n] [--resume]\n                   [--start t.json] [--seed n] [--lambda n] [--sigma s] [--speakers MA,MB,MC,MD,MF,MG]\n                   [--groups timbre,source,noise,pitch,motion,consonants] [--weights consonants=2,…] [--pull λ] [--screen]\n       chimera fit bench <reference.json> [--cores n]";
+const USAGE: &str = "usage: chimera fit <reference.json> --fields source.*,noise.* --out run/ [--cores 2] [--minutes n] [--generations n] [--resume]\n                   [--start t.json] [--seed n] [--lambda n] [--sigma s] [--speakers MA,MB,MC,MD,MF,MG]\n                   [--groups timbre,source,noise,pitch,motion,consonants] [--weights consonants=2,…] [--pull λ] [--screen]\n                   [--level-weight w] [--limit-weight w] [--level-target dB]\n       chimera fit bench <reference.json> [--cores n]";
 
 #[cfg(unix)]
 unsafe extern "C" {
@@ -343,6 +375,28 @@ fn batch_objectives(scores: &[Score], mix: &Mix) -> (Vec<f64>, usize) {
     (values, scores.iter().filter(|s| !s.failed).map(charged).sum())
 }
 
+/// How the level is held: see the head of this file.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Hold {
+    /// the default tuning's `level_db` on the fixed set (dBFS), or `--level-target`
+    target: f64,
+    /// per dB beyond `LEVEL_FREE_DB` from the target
+    level_weight: f64,
+    /// per unit share of the samples the limiter worked on
+    limit_weight: f64,
+}
+
+impl Hold {
+    /// What a score pays for its level and its time on the limiter. A score without a level or
+    /// a limiter's count pays nothing for the one it lacks.
+    fn cost(&self, score: &Score) -> f64 {
+        let over = ((score.level_db - self.target).abs() - LEVEL_FREE_DB).max(0.0);
+        let level = if over.is_finite() { self.level_weight * over } else { 0.0 };
+        let limit = if score.limited.is_finite() { self.limit_weight * score.limited } else { 0.0 };
+        level + limit
+    }
+}
+
 fn group_values(score: &Score) -> [f64; GROUPS.len()] {
     std::array::from_fn(|k| score.groups.get(GROUPS[k]).copied().unwrap_or(f64::NAN))
 }
@@ -361,6 +415,7 @@ struct State {
     start: Tuning,
     speakers: Vec<String>,
     mix: Mix,
+    hold: Hold,
     pull: f64,
     sigma: f64,
     /// the fixed set's sentence ids
@@ -372,6 +427,8 @@ struct State {
     best_x: Vec<f64>,
     best_score: f64,
     best_groups: [f64; GROUPS.len()],
+    /// the best's level (dBFS) and limiter's share on the fixed set
+    best_level: [f64; 2],
     /// the worst value a candidate that did not fail has had
     worst_seen: Option<f64>,
     failed: usize,
@@ -404,12 +461,13 @@ impl State {
             "speakers": self.speakers,
             "groups": self.mix.groups,
             "weights": self.mix.weights,
+            "level": { "target": self.hold.target, "weight": self.hold.level_weight, "limitWeight": self.hold.limit_weight },
             "pull": self.pull,
             "sigma": self.sigma,
             "batch": BATCH,
             "fixed": self.fixed,
             "startScore": { "score": num(self.start_score), "groups": self.start_groups.map(num), "terms": self.start_terms },
-            "best": { "generation": self.best_generation, "x": self.best_x, "score": num(self.best_score), "groups": self.best_groups.map(num) },
+            "best": { "generation": self.best_generation, "x": self.best_x, "score": num(self.best_score), "groups": self.best_groups.map(num), "level": self.best_level.map(num) },
             "worstSeen": self.worst_seen,
             "failed": self.failed,
             "stall": { "score": num(self.stall_score), "generation": self.stall_generation },
@@ -428,7 +486,7 @@ impl State {
         let per_group = |v: &Value, what: &str| -> Result<[f64; GROUPS.len()], String> { <[f64; GROUPS.len()]>::try_from(v.as_array().ok_or(bad(what))?.iter().map(nan).collect::<Vec<_>>()).map_err(|_| bad(what)) };
         if v["version"].as_u64() != Some(STATE_VERSION) {
             return Err(format!(
-                "a fit's state of version {}, this fitter writes version {STATE_VERSION}: that run was scored by a judge with other groups (the `consonants` group came with version 2) and cannot go on; start a new run in another --out, with --start <its best.json> to go on from where it got",
+                "a fit's state of version {}, this fitter writes version {STATE_VERSION}: that run had another objective (the judge's `consonants` group came with version 2, the level's target and its hold with version 3; an older run has no level target and could grow loud) and cannot go on; start a new run in another --out, with --start <its best.json> to go on from where it got",
                 v["version"]
             ));
         }
@@ -444,6 +502,7 @@ impl State {
             start: serde_json::from_value(v["start"].clone()).map_err(|e| bad(&format!("start: {e}")))?,
             speakers: strings(&v["speakers"], "speakers")?,
             mix: Mix { groups: strings(&v["groups"], "groups")?, weights: per_group(&v["weights"], "weights")? },
+            hold: Hold { target: f(&v["level"]["target"], "level target")?, level_weight: f(&v["level"]["weight"], "level weight")?, limit_weight: f(&v["level"]["limitWeight"], "limit weight")? },
             pull: f(&v["pull"], "pull")?,
             sigma: f(&v["sigma"], "sigma")?,
             fixed: strings(&v["fixed"], "fixed")?,
@@ -454,6 +513,7 @@ impl State {
             best_x: v["best"]["x"].as_array().ok_or(bad("best"))?.iter().map(|x| f(x, "best")).collect::<Result<_, _>>()?,
             best_score: nan(&v["best"]["score"]),
             best_groups: per_group(&v["best"]["groups"], "best")?,
+            best_level: <[f64; 2]>::try_from(v["best"]["level"].as_array().ok_or(bad("best level"))?.iter().map(nan).collect::<Vec<_>>()).map_err(|_| bad("best level"))?,
             worst_seen: v["worstSeen"].as_f64(),
             failed: n(&v["failed"], "failed")?,
             stall_score: nan(&v["stall"]["score"]),
@@ -481,6 +541,9 @@ impl State {
             .or_else(|| differ("--speakers", &given.speakers, &self.speakers))
             .or_else(|| differ("--groups", &given.groups, &self.mix.groups))
             .or_else(|| differ("--weights", &given.weights, &self.mix.weights))
+            .or_else(|| differ("--level-weight", &given.level_weight, &self.hold.level_weight))
+            .or_else(|| differ("--limit-weight", &given.limit_weight, &self.hold.limit_weight))
+            .or_else(|| differ("--level-target", &given.level_target, &self.hold.target))
             .or_else(|| differ("--pull", &given.pull, &self.pull))
             .or_else(|| differ("--sigma", &given.sigma, &self.sigma))
             .or_else(|| differ("--lambda", &given.lambda, &self.cma.lambda()))
@@ -497,6 +560,9 @@ struct Given {
     speakers: Option<Vec<String>>,
     groups: Option<Vec<String>>,
     weights: Option<[f64; GROUPS.len()]>,
+    level_weight: Option<f64>,
+    limit_weight: Option<f64>,
+    level_target: Option<f64>,
     pull: Option<f64>,
     sigma: Option<f64>,
     lambda: Option<usize>,
@@ -513,16 +579,19 @@ fn fx(x: f64) -> String {
     if x.is_finite() { format!("{x:.6}") } else { "-".into() }
 }
 
-/// One row of log.tsv (without its newline).
-fn log_row(state: &State, batch_best: f64, batch_mean: f64, fixed: f64, failed: usize, unmeasured: usize, rate: f64) -> String {
+/// One row of log.tsv (without its newline). `level` is the level (dBFS) and the limiter's share
+/// of the candidate `fixed` is the value of.
+fn log_row(state: &State, batch_best: f64, batch_mean: f64, fixed: f64, level: [f64; 2], failed: usize, unmeasured: usize, rate: f64) -> String {
     let groups: Vec<String> = state.best_groups.iter().map(|g| fx(*g)).collect();
     format!(
-        "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{failed}\t{unmeasured}\t{:.6e}\t{rate:.2}\t{:.0}",
+        "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{failed}\t{unmeasured}\t{:.6e}\t{rate:.2}\t{:.0}",
         state.generation(),
         state.cma.evaluations(),
         fx(batch_best),
         fx(batch_mean),
         fx(fixed),
+        if level[0].is_finite() { format!("{:.3}", level[0]) } else { "-".into() },
+        fx(level[1]),
         fx(state.best_score),
         groups.join("\t"),
         state.cma.sigma(),
@@ -576,7 +645,7 @@ fn screen(lab: &Lab, out: &str, state: &State, fields: &[&'static Field], fixed:
             }
             let (score, said) = lab.on_set(&with_values(&state.start, &[*f], &[end]), fixed, &BTreeMap::new())?;
             rendered += said;
-            row.at[e] = fixed_objective(&score, &state.mix, &state.start_terms);
+            row.at[e] = fixed_objective(&score, &state.mix, &state.start_terms) + state.hold.cost(&score);
             row.failed[e] = score.failed;
             let change = row.at[e] - state.start_score;
             if !score.failed && change.abs() > row.change.abs() {
@@ -673,6 +742,9 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
             "--lambda" => given.lambda = Some(parse("--lambda", val("--lambda")?)?),
             "--sigma" => given.sigma = Some(parse("--sigma", val("--sigma")?)?),
             "--pull" => given.pull = Some(parse("--pull", val("--pull")?)?),
+            "--level-weight" => given.level_weight = Some(parse("--level-weight", val("--level-weight")?)?),
+            "--limit-weight" => given.limit_weight = Some(parse("--limit-weight", val("--limit-weight")?)?),
+            "--level-target" => given.level_target = Some(parse("--level-target", val("--level-target")?)?),
             "--speakers" => given.speakers = Some(split(&val("--speakers")?)),
             "--groups" => given.groups = Some(split(&val("--groups")?)),
             "--weights" => given.weights = Some(parse_weights(&val("--weights")?)?),
@@ -709,6 +781,9 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
     if given.pull.is_some_and(|p| !(p >= 0.0) || !p.is_finite()) || given.sigma.is_some_and(|s| !(s > 0.0) || !s.is_finite()) || given.lambda.is_some_and(|l| l < 2) {
         return Err("--pull is 0 or more, --sigma above 0, --lambda 2 or more".into());
     }
+    if [given.level_weight, given.limit_weight].iter().flatten().any(|w| !(*w >= 0.0) || !w.is_finite()) || given.level_target.is_some_and(|t| !t.is_finite()) {
+        return Err("--level-weight and --limit-weight are 0 or more, --level-target a level in dBFS".into());
+    }
     if let Some(spec) = &fields_arg {
         given.selected = Some(paths_of(&select_fields(spec)?));
     }
@@ -742,6 +817,7 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
         let kept: Vec<&str> = log.lines().filter(|l| l.split('\t').next().and_then(|g| g.parse::<usize>().ok()).is_none_or(|g| g <= state.generation())).collect();
         write_atomic(&log_path, &(kept.join("\n") + "\n"))?;
         save_best(&state, &fields)?;
+        println!("level target {:.2} dBFS (from state.json), held within {LEVEL_FREE_DB} dB at {} a dB beyond, the limiter at {} a share", state.hold.target, state.hold.level_weight, state.hold.limit_weight);
         println!("resuming {out} at generation {}: best {} on the fixed {}", state.generation(), fx(state.best_score), fixed.len());
         (state, fields, pools, fixed)
     } else {
@@ -765,12 +841,34 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
         let fixed = fixed_set(&pools, seed);
         std::fs::create_dir_all(&out).map_err(|e| format!("{out}: {e}"))?;
         // the start on the fixed set, once
-        let (score, said) = lab.on_set(&start, &fixed, &BTreeMap::new())?;
+        let (score, mut said) = lab.on_set(&start, &fixed, &BTreeMap::new())?;
         if score.failed {
-            return Err("the start's own render failed on the fixed set: nothing to fit from".into());
+            return Err("the start's own render failed on the fixed set (a non-finite sample): nothing to fit from".into());
         }
+        // the level to hold: the default tuning's on the fixed set, whatever the start is
+        let target = match given.level_target {
+            Some(t) => {
+                println!("level target {t:.2} dBFS (--level-target)");
+                t
+            }
+            None => {
+                let default = if start == Tuning::default() {
+                    score.clone()
+                } else {
+                    let (s, n) = lab.on_set(&Tuning::default(), &fixed, &BTreeMap::new())?;
+                    said += n;
+                    s
+                };
+                if !default.level_db.is_finite() {
+                    return Err("the default tuning has no level on the fixed set (no stressed vowel measured): name one with --level-target".into());
+                }
+                println!("level target {:.2} dBFS: the default tuning over the stressed vowels of the fixed {} (limiter on {:.3} % of its samples)", default.level_db, fixed.len(), 100.0 * default.limited);
+                default.level_db
+            }
+        };
+        let hold = Hold { target, level_weight: given.level_weight.unwrap_or(DEFAULT_LEVEL_WEIGHT), limit_weight: given.limit_weight.unwrap_or(DEFAULT_LIMIT_WEIGHT) };
         let start_terms = measured_terms(&score);
-        let start_score = fixed_objective(&score, &mix, &start_terms);
+        let start_score = fixed_objective(&score, &mix, &start_terms) + hold.cost(&score);
         let x0: Vec<f64> = fields.iter().map(|f| (f.get)(&start)).collect();
         let cma_of = |fields: &[&'static Field]| {
             Cma::new(
@@ -787,6 +885,7 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
             start,
             speakers,
             mix,
+            hold,
             pull: given.pull.unwrap_or(DEFAULT_PULL),
             sigma,
             fixed: fixed.iter().map(|s| s.id.clone()).collect(),
@@ -797,6 +896,7 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
             best_x: x0,
             best_score: start_score,
             best_groups: group_values(&score),
+            best_level: [score.level_db, score.limited],
             worst_seen: None,
             failed: 0,
             stall_score: start_score,
@@ -805,7 +905,18 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
             rendered: said,
             cma: cma_of(&fields),
         };
-        println!("start: {} on the fixed {} ({} terms; {})", fx(start_score), fixed.len(), state.start_terms.len(), GROUPS.iter().zip(&state.start_groups).map(|(g, x)| format!("{g} {}", fx(*x))).collect::<Vec<_>>().join("  "));
+        println!(
+            "start: {} on the fixed {} ({} terms; {}; level {:.2} dBFS, limiter on {:.3} %, held at {} a dB and {} a share: {} of the value)",
+            fx(start_score),
+            fixed.len(),
+            state.start_terms.len(),
+            GROUPS.iter().zip(&state.start_groups).map(|(g, x)| format!("{g} {}", fx(*x))).collect::<Vec<_>>().join("  "),
+            score.level_db,
+            100.0 * score.limited,
+            hold.level_weight,
+            hold.limit_weight,
+            fx(hold.cost(&score))
+        );
         if screening {
             let (kept, said) = screen(&lab, &out, &state, &fields, &fixed)?;
             if kept.is_empty() {
@@ -820,7 +931,7 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
         }
         state.elapsed = run_clock.elapsed().as_secs_f64();
         let rate = state.rendered as f64 / state.elapsed.max(1e-9);
-        write_atomic(&log_path, &format!("{LOG_HEAD}\n{}\n", log_row(&state, f64::NAN, f64::NAN, start_score, 0, 0, rate)))?;
+        write_atomic(&log_path, &format!("{LOG_HEAD}\n{}\n", log_row(&state, f64::NAN, f64::NAN, start_score, state.best_level, 0, 0, rate)))?;
         save_best(&state, &fields)?;
         write_atomic(&state_path, &(serde_json::to_string(&state.to_json()).unwrap() + "\n"))?;
         (state, fields, pools, fixed)
@@ -853,7 +964,7 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
         let measured = par_map(&jobs, cores, |(c, s)| lab.scorer.measure(&tunings[*c], s))?;
         let scores: Vec<Score> = measured.chunks(batch.len()).map(|m| lab.scorer.judge(m)).collect();
         let (raw, unmeasured) = batch_objectives(&scores, &state.mix);
-        let mut values: Vec<f64> = raw.iter().zip(&xs).map(|(v, x)| v + pull(state.pull, &fields, x, &x0)).collect();
+        let mut values: Vec<f64> = raw.iter().zip(&xs).zip(&scores).map(|((v, x), s)| v + pull(state.pull, &fields, x, &x0) + state.hold.cost(s)).collect();
         // a blow-up gets the worst value seen so far in the run, this generation's included
         let failed = scores.iter().filter(|s| s.failed).count();
         for (v, _) in values.iter().zip(&scores).filter(|(_, s)| !s.failed) {
@@ -869,12 +980,13 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
         let best = (0..values.len()).min_by(|&a, &b| values[a].total_cmp(&values[b])).unwrap();
         let have: BTreeMap<&str, &SentMeas> = batch.iter().map(|s| s.id.as_str()).zip(&measured[best * batch.len()..(best + 1) * batch.len()]).collect();
         let (score, said) = lab.on_set(&tunings[best], &fixed, &have)?;
-        let on_fixed = fixed_objective(&score, &state.mix, &start_terms);
+        let on_fixed = fixed_objective(&score, &state.mix, &start_terms) + state.hold.cost(&score);
         if !score.failed && on_fixed < state.best_score {
             state.best_generation = g + 1;
             state.best_x = xs[best].clone();
             state.best_score = on_fixed;
             state.best_groups = group_values(&score);
+            state.best_level = [score.level_db, score.limited];
             save_best(&state, &fields)?;
         }
         if state.best_score < state.stall_score * (1.0 - STALL_GAIN) {
@@ -886,7 +998,7 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
         state.elapsed = elapsed_before + run_clock.elapsed().as_secs_f64();
         let rate = rendered as f64 / clock.elapsed().as_secs_f64().max(1e-9);
         let batch_best = values.iter().copied().fold(f64::INFINITY, f64::min);
-        let row = log_row(&state, batch_best, values.iter().sum::<f64>() / values.len() as f64, on_fixed, failed, unmeasured, rate);
+        let row = log_row(&state, batch_best, values.iter().sum::<f64>() / values.len() as f64, on_fixed, [score.level_db, score.limited], failed, unmeasured, rate);
         // the log's row first, the state last: a kill between the two leaves a row the resume removes
         {
             use std::io::Write;
@@ -894,10 +1006,10 @@ pub fn run(_ctx: &Ctx, a: &[String]) -> Result<(), String> {
             writeln!(log, "{row}").map_err(|e| format!("{log_path}: {e}"))?;
         }
         write_atomic(&state_path, &(serde_json::to_string(&state.to_json()).unwrap() + "\n"))?;
-        println!("generation {}: batch best {} fixed {} best {} (generation {}){} sigma {:.4} {:.2} sentences/s", g + 1, fx(batch_best), fx(on_fixed), fx(state.best_score), state.best_generation, if failed > 0 { format!(" {failed} failed") } else { String::new() }, state.cma.sigma(), rate);
+        println!("generation {}: batch best {} fixed {} (level {:.2} dBFS, limiter {:.3} %) best {} (generation {}){} sigma {:.4} {:.2} sentences/s", g + 1, fx(batch_best), fx(on_fixed), score.level_db, 100.0 * score.limited, fx(state.best_score), state.best_generation, if failed > 0 { format!(" {failed} failed") } else { String::new() }, state.cma.sigma(), rate);
     };
     println!("stopped at generation {}: {stopped}", state.generation());
-    println!("best on the fixed {}: {} (start {}), from generation {} → {best_path}", fixed.len(), fx(state.best_score), fx(state.start_score), state.best_generation);
+    println!("best on the fixed {}: {} (start {}), level {:.2} dBFS against the target {:.2}, limiter on {:.3} %, from generation {} → {best_path}", fixed.len(), fx(state.best_score), fx(state.start_score), state.best_level[0], state.hold.target, 100.0 * state.best_level[1], state.best_generation);
     Ok(())
 }
 
@@ -1037,7 +1149,7 @@ mod tests {
             groups.insert(g.to_string(), if cs.is_empty() { f64::NAN } else { cs.iter().sum::<f64>() / cs.len() as f64 });
         }
         let have: Vec<f64> = GROUPS.iter().map(|g| groups[*g]).filter(|x| x.is_finite()).collect();
-        Score { score: have.iter().sum::<f64>() / have.len() as f64, groups, terms, sentences: 12, failed: false }
+        Score { score: have.iter().sum::<f64>() / have.len() as f64, groups, terms, sentences: 12, level_db: -24.0, speech_db: -27.0, limited: 0.0, failed: false }
     }
 
     #[test]
@@ -1111,6 +1223,7 @@ mod tests {
             start,
             speakers: names(&FIT_MEN),
             mix: Mix { groups: names(&["source", "noise"]), weights: [1.0, 1.0, 2.0, 1.0, 1.0, 1.0] },
+            hold: Hold { target: -23.456_789_012_345_6, level_weight: DEFAULT_LEVEL_WEIGHT, limit_weight: DEFAULT_LIMIT_WEIGHT },
             pull: DEFAULT_PULL,
             sigma: DEFAULT_SIGMA,
             fixed: names(&["01_03", "07_10"]),
@@ -1121,6 +1234,7 @@ mod tests {
             best_x: cma.ask()[0].clone(),
             best_score: 0.987_654_321_012_345_6,
             best_groups: [0.5, 2.0, 1.4, f64::NAN, 0.1, 0.8],
+            best_level: [-23.1, 0.0],
             worst_seen: Some(1.3),
             failed: 1,
             stall_score: 1.0,
@@ -1154,6 +1268,14 @@ mod tests {
         v["version"] = json!(1);
         let old = State::from_json(&v).unwrap_err();
         assert!(old.contains("version 1,") && old.contains("consonants") && old.contains("--start"), "{old}");
+        // and one from before the level was held: it has no target
+        v["version"] = json!(2);
+        let old = State::from_json(&v).unwrap_err();
+        assert!(old.contains("version 2,") && old.contains("no level target") && old.contains("--start"), "{old}");
+        assert_eq!(back.hold, state.hold);
+        let mut v = state.to_json();
+        v["level"] = Value::Null;
+        assert!(State::from_json(&v).unwrap_err().contains("level target"));
         assert!(State::from_json(&json!({ "version": STATE_VERSION, "batch": BATCH })).is_err());
     }
 
@@ -1179,6 +1301,9 @@ mod tests {
             speakers: Some(state.speakers.clone()),
             groups: Some(state.mix.groups.clone()),
             weights: Some(state.mix.weights),
+            level_weight: Some(DEFAULT_LEVEL_WEIGHT),
+            limit_weight: Some(DEFAULT_LIMIT_WEIGHT),
+            level_target: Some(state.hold.target),
             pull: Some(DEFAULT_PULL),
             sigma: Some(DEFAULT_SIGMA),
             lambda: Some(state.cma.lambda()),
@@ -1193,6 +1318,9 @@ mod tests {
             (Given { speakers: Some(names(&["MA", "MB"])), ..same.clone() }, "--speakers"),
             (Given { groups: Some(names(&["pitch", "motion"])), ..same.clone() }, "--groups"),
             (Given { weights: Some([1.0; GROUPS.len()]), ..same.clone() }, "--weights"),
+            (Given { level_weight: Some(0.2), ..same.clone() }, "--level-weight"),
+            (Given { limit_weight: Some(0.0), ..same.clone() }, "--limit-weight"),
+            (Given { level_target: Some(-20.0), ..same.clone() }, "--level-target"),
             (Given { pull: Some(0.02), ..same.clone() }, "--pull"),
             (Given { sigma: Some(0.3), ..same.clone() }, "--sigma"),
             (Given { lambda: Some(state.cma.lambda() + 2), ..same.clone() }, "--lambda"),
@@ -1208,12 +1336,32 @@ mod tests {
     fn fit_log_rows_carry_no_timing_before_their_last_two_columns() {
         let state = a_state();
         let cols = LOG_HEAD.split('\t').count();
-        let (a, b) = (log_row(&state, 0.9, 1.1, 1.0, 1, 2, 3.25), log_row(&State { elapsed: 999.0, ..a_state() }, 0.9, 1.1, 1.0, 1, 2, 7.5));
+        let (a, b) = (log_row(&state, 0.9, 1.1, 1.0, [-23.5, 0.001], 1, 2, 3.25), log_row(&State { elapsed: 999.0, ..a_state() }, 0.9, 1.1, 1.0, [-23.5, 0.001], 1, 2, 7.5));
         assert_eq!(a.split('\t').count(), cols);
         assert_ne!(a, b);
         let cut = |r: &str| r.split('\t').take(cols - 2).collect::<Vec<_>>().join("\t");
         assert_eq!(cut(&a), cut(&b));
         assert!(LOG_HEAD.ends_with("sentences_per_s\telapsed_s"));
         assert!(a.starts_with("3\t") && a.contains("\t-\t"), "{a}");
+        let col = |name: &str| a.split('\t').nth(LOG_HEAD.split('\t').position(|c| c == name).unwrap()).unwrap().to_string();
+        assert_eq!((col("level_db"), col("limited"), col("fixed")), ("-23.500".to_string(), "0.001000".to_string(), "1.000000".to_string()));
+    }
+
+    #[test]
+    fn fit_holds_the_level_and_the_limiter() {
+        let hold = Hold { target: -24.0, level_weight: DEFAULT_LEVEL_WEIGHT, limit_weight: DEFAULT_LIMIT_WEIGHT };
+        let at = |level_db: f64, limited: f64| Score { level_db, limited, ..score_of(vec![term("a", "source", 1.0)]) };
+        // a decibel either side is free
+        assert_eq!((hold.cost(&at(-24.0, 0.0)), hold.cost(&at(-23.0, 0.0)), hold.cost(&at(-25.0, 0.0))), (0.0, 0.0, 0.0));
+        // beyond it each decibel costs the weight, louder or quieter alike
+        assert!((hold.cost(&at(-21.0, 0.0)) - 0.2).abs() < 1e-12 && (hold.cost(&at(-27.0, 0.0)) - 0.2).abs() < 1e-12);
+        // 7.3 dB over and 0.15 % on the limiter
+        assert!((hold.cost(&at(-16.7, 0.0015)) - (0.63 + 0.03)).abs() < 1e-9);
+        // 1 % of the samples limited costs 0.2
+        assert!((hold.cost(&at(-24.0, 0.01)) - 0.2).abs() < 1e-12);
+        // a score with neither pays nothing here
+        assert_eq!(hold.cost(&at(f64::NAN, f64::NAN)), 0.0);
+        // weights of 0 switch the hold off
+        assert_eq!(Hold { level_weight: 0.0, limit_weight: 0.0, ..hold }.cost(&at(0.0, 0.5)), 0.0);
     }
 }

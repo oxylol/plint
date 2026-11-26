@@ -68,13 +68,28 @@
 //! let all = sentences(&reference.speakers)?;                  // (id "01_03", text), by id
 //! let score = scorer.score(&tuning, &all[..12], 2)?;          // renders, measures, scores; prints nothing
 //! score.score; score.groups["source"]; score.terms; score.failed
+//! score.level_db; score.limited                               // not scored: how loud, and the limiter's share
 //! // or in one call, by sentence id:
 //! let score = score_sentences(&reference, &tuning, &["01_03".into()], 2)?;
 //! // or in two steps, to keep the measures: scorer.measure(&tuning, &s)? then scorer.judge(&[…])
 //! ```
 //!
-//! A render with a non-finite sample, or louder than the limiter's knee for more than 5 % of its
-//! samples, makes the whole score `WORST` (`Score::failed`).
+//! A render with a non-finite sample makes the whole score `WORST` (`Score::failed`).
+//!
+//! **Level.** The judge's terms are all relative (to the utterance's stressed vowels, or between
+//! bands), so a voice twice as loud scores the same. A score therefore also carries, unscored,
+//! the voice's absolute level (`level_db`: the rms over the stressed vowels' middle halves, the
+//! spans the terms are measured re, pooled over the sentences, in dB re digital full scale;
+//! `speech_db`: the same over each utterance from its first phone to its last) and the share of
+//! the samples on which the voice's output limiter turned the gain down (`limited`; the voice
+//! counts them, since the samples themselves stay at the limiter's ceiling). The fitter holds
+//! both (`fit.rs`); a recording or somebody else's render has no `limited`. A voice whose limiter
+//! worked on more than 5 % of its samples is called LIMITED in the printed score: its figures
+//! are of a voice the limiter has reshaped. It is not `failed`, which stays for a render with
+//! nothing to measure: the first fit's voice sits on the limiter for 42 % of its samples
+//! (T3.6), and a fit that starts from it needs its terms, and a cost that falls as the limiter
+//! lets go, to find the way back. (The rule this replaces, "more than 5 % of the samples over
+//! 0.75", never fired: the limiter holds the samples at 0.75.)
 
 use crate::compare::tsp::{AFFRICATES, BANDS, FRAME, HOP, Phone, SIBILANTS, STOPS, Sig, Tools, Utt, VOWELS, cepstrum, db, is_vowel, load_utts, mad_sd, mean_square, measure as judge_measure, percentile};
 use crate::compare::{N_CEP, N_MEL, mcd, median, read_wav};
@@ -104,9 +119,10 @@ const FIT_MEN: [&str; 6] = ["MA", "MB", "MC", "MD", "MF", "MG"];
 const FIT_WOMEN: [&str; 7] = ["FA", "FB", "FC", "FD", "FE", "FF", "FG"];
 /// A pitch shape needs this many voiced 10 ms frames (as f0_shape.py).
 const MIN_VOICED: usize = 30;
-/// The limiter's knee (human_voice.rs): a render above it for more than `MAX_LOUD` of its samples failed.
-const LIMITER_KNEE: f64 = 0.75;
-const MAX_LOUD: f64 = 0.05;
+/// A voice whose output limiter (human_voice.rs) turned the gain down on more than this share of
+/// its samples is called limited. (The samples cannot say it: the limiter holds them at its 0.75
+/// ceiling.)
+pub const MAX_LIMITED: f64 = 0.05;
 
 const NASALS: [&str; 3] = ["m", "n", "ŋ"];
 const FRICATIVES: [&str; 8] = ["f", "v", "θ", "ð", "s", "z", "ʃ", "h"];
@@ -251,13 +267,20 @@ pub struct SentMeas {
     modulation: [f64; 3],
     /// spectral change over the whole utterance: its median and its top tenth
     change: [f64; 2],
-    /// a render that went non-finite or sat in the limiter
+    /// the stressed vowels' middle halves: the sum of the samples' squares (full scale 1) and how many
+    vowel_power: (f64, usize),
+    /// the same over the speech, first phone to last
+    speech_power: (f64, usize),
+    /// a render of ours: the samples its limiter turned down, and all its samples; none for a
+    /// recording or somebody else's render
+    limited: Option<(u64, usize)>,
+    /// a render that went non-finite
     failed: bool,
 }
 
 impl SentMeas {
     fn failed() -> Self {
-        SentMeas { toks: Vec::new(), cons: Vec::new(), pitch: None, modulation: [f64::NAN; 3], change: [f64::NAN; 2], failed: true }
+        SentMeas { toks: Vec::new(), cons: Vec::new(), pitch: None, modulation: [f64::NAN; 3], change: [f64::NAN; 2], vowel_power: (0.0, 0), speech_power: (0.0, 0), limited: None, failed: true }
     }
 }
 
@@ -488,12 +511,25 @@ fn measure_sentence(kit: &Kit, x: &[f64], phones: &[Phone], female: bool) -> Sen
             Con { ipa, level: t.level, burst: t.burst, closure: if stop { closure_db(&sig, &phones[i], vref) } else { f64::NAN }, centroid: t.centroid.log2() }
         })
         .collect();
+    // the absolute level: the samples' own squares over the spans `vref` is taken from, and over the speech
+    let power = |a: f64, b: f64| {
+        let seg = sig.slice(a, b);
+        (seg.iter().map(|v| v * v).sum::<f64>(), seg.len())
+    };
+    let vowel_power = phones.iter().filter(|p| is_vowel(&p.ipa) && p.stress == 1).fold((0.0, 0), |acc, p| {
+        let (a, b) = Sig::middle(p);
+        let (ss, n) = power(a, b);
+        (acc.0 + ss, acc.1 + n)
+    });
     SentMeas {
         toks,
         cons,
         pitch: pitch_shape(&sig.f0, t_first, t_last),
         modulation: modulation(&kit.env, &env),
         change: [percentile(&all_change, 0.5), percentile(&all_change, 0.9)],
+        vowel_power,
+        speech_power: power(t_first, t_last),
+        limited: None,
         failed: false,
     }
 }
@@ -627,7 +663,17 @@ struct Values {
     ceps: BTreeMap<&'static str, [f64; N_CEP]>,
     cep_support: BTreeMap<&'static str, usize>,
     sentences: usize,
+    /// see `Score`
+    level_db: f64,
+    speech_db: f64,
+    limited: f64,
     failed: bool,
+}
+
+/// The rms (dB re full scale) of sums of squares and counts, pooled; NaN with no sample.
+fn pooled_db(parts: impl Iterator<Item = (f64, usize)>) -> f64 {
+    let (ss, n) = parts.fold((0.0, 0usize), |acc, p| (acc.0 + p.0, acc.1 + p.1));
+    if n > 0 { db(ss / n as f64) } else { f64::NAN }
 }
 
 fn values(defs: &[TermDef], ms: &[&SentMeas]) -> Values {
@@ -672,7 +718,18 @@ fn values(defs: &[TermDef], ms: &[&SentMeas]) -> Values {
             ceps.insert(c, cepstrum(&avg));
         }
     }
-    Values { terms, ceps, cep_support, sentences: ms.len(), failed: ms.iter().any(|m| m.failed) }
+    // the limiter's share of all the samples, when every sentence is a render of ours
+    let limited = ms.iter().try_fold((0u64, 0usize), |acc, m| m.limited.map(|l| (acc.0 + l.0, acc.1 + l.1))).filter(|l| l.1 > 0).map_or(f64::NAN, |l| l.0 as f64 / l.1 as f64);
+    Values {
+        terms,
+        ceps,
+        cep_support,
+        sentences: ms.len(),
+        level_db: pooled_db(ms.iter().map(|m| m.vowel_power)),
+        speech_db: pooled_db(ms.iter().map(|m| m.speech_power)),
+        limited,
+        failed: ms.iter().any(|m| m.failed),
+    }
 }
 
 /// A term's unit: the speakers' MAD scaled to an SD, at least the floor.
@@ -859,7 +916,15 @@ pub struct Score {
     /// every term of the reference, by group (in `GROUPS`' order) and then by name
     pub terms: Vec<TermScore>,
     pub sentences: usize,
-    /// a render had a non-finite sample or sat in the limiter: nothing was scored
+    /// Not scored. The voice's level: the rms over the stressed vowels' middle halves, pooled over
+    /// the sentences (dB re digital full scale; NaN with no stressed vowel).
+    pub level_db: f64,
+    /// Not scored. The rms over each utterance from its first phone to its last, pooled (dB re full scale).
+    pub speech_db: f64,
+    /// Not scored. The share of all the renders' samples on which the voice's output limiter
+    /// turned the gain down (0..1); NaN when a sentence was not rendered here (a recording).
+    pub limited: f64,
+    /// a render had a non-finite sample: nothing was scored
     pub failed: bool,
 }
 
@@ -890,7 +955,7 @@ fn score_values(r: &Reference, defs: &[TermDef], v: &Values) -> Score {
     }
     let have: Vec<f64> = GROUPS.iter().map(|g| groups[*g]).filter(|x| x.is_finite()).collect();
     let score = if v.failed || have.is_empty() { WORST } else { have.iter().sum::<f64>() / have.len() as f64 };
-    Score { score, groups, terms, sentences: v.sentences, failed: v.failed }
+    Score { score, groups, terms, sentences: v.sentences, level_db: v.level_db, speech_db: v.speech_db, limited: v.limited, failed: v.failed }
 }
 
 fn num(x: f64) -> Value {
@@ -908,7 +973,7 @@ impl Score {
             .iter()
             .map(|t| json!({ "centre": num(t.centre), "cost": num(t.cost), "group": t.group, "name": t.name, "scored": t.scored, "support": t.support, "unit": num(t.unit), "value": num(t.value) }))
             .collect();
-        json!({ "failed": self.failed, "groups": groups, "score": num(self.score), "sentences": self.sentences, "terms": terms, "voice": voice })
+        json!({ "failed": self.failed, "groups": groups, "levelDb": num(self.level_db), "limited": num(self.limited), "score": num(self.score), "sentences": self.sentences, "speechDb": num(self.speech_db), "terms": terms, "voice": voice })
     }
 
     /// The scored terms that cost most, worst first (ties in the terms' own order).
@@ -1152,23 +1217,26 @@ impl<'a> Scorer<'a> {
         self.measure_at(tuning, s, None)
     }
 
-    /// Say one sentence: its samples and the plan's phones (as the phones that were said).
-    fn say(&self, tuning: &Tuning, s: &Sentence) -> Result<(Vec<f64>, Vec<Phone>), String> {
+    /// Say one sentence: its samples, the plan's phones (as the phones that were said) and how
+    /// many samples the voice's limiter turned down.
+    fn say(&self, tuning: &Tuning, s: &Sentence) -> Result<(Vec<f64>, Vec<Phone>, u64), String> {
         let sp = say_with(&self.g2p, &s.text, &self.body, tuning).map_err(|e| format!("{}: {e}", s.id))?;
         let plan: Vec<Phone> = sp.plan.segments.iter().map(|p| Phone { ipa: p.ipa.clone(), stress: p.stress.unwrap_or(0), t0: p.t0, t1: p.t1 }).collect();
         let said: Vec<String> = self.g2p.to_phrases(&s.text).iter().flat_map(|p| p.segments.iter().map(|g| g.ipa.clone())).collect();
-        Ok((sp.out.iter().map(|&v| v as f64).collect(), plan_phones(&plan, Some(&said))))
+        Ok((sp.out.iter().map(|&v| v as f64).collect(), plan_phones(&plan, Some(&said)), sp.limited))
     }
 
     fn measure_at(&self, tuning: &Tuning, s: &Sentence, times: Option<&[Phone]>) -> Result<SentMeas, String> {
-        let (x, plan) = self.say(tuning, s)?;
-        Ok(self.measure_samples(&x, times.unwrap_or(&sound_times(&plan))))
+        let (x, plan, limited) = self.say(tuning, s)?;
+        let mut m = self.measure_samples(&x, times.unwrap_or(&sound_times(&plan)));
+        m.limited = Some((limited, x.len()));
+        Ok(m)
     }
 
-    /// Measure samples somebody else rendered (48 kHz) with their phone times.
+    /// Measure samples somebody else rendered (48 kHz) with their phone times (whether their
+    /// limiter worked cannot be read off the samples). A non-finite sample is a failed measure.
     fn measure_samples(&self, x: &[f64], phones: &[Phone]) -> SentMeas {
-        let loud = x.iter().filter(|v| v.abs() > LIMITER_KNEE).count();
-        if x.iter().any(|v| !v.is_finite()) || loud as f64 > MAX_LOUD * x.len() as f64 {
+        if x.iter().any(|v| !v.is_finite()) {
             return SentMeas::failed();
         }
         measure_sentence(&self.kit, x, phones, self.female())
@@ -1205,6 +1273,9 @@ fn print_score(voice: &str, s: &Score, worst: usize) {
     let fx = |x: f64| if x.is_finite() { format!("{x:.3}") } else { "-".into() };
     println!("{voice}: realism {}  ({} sentences{})", fx(s.score), s.sentences, if s.failed { ", a render FAILED" } else { "" });
     println!("  {}", GROUPS.iter().map(|g| format!("{g} {}", fx(s.groups[*g]))).collect::<Vec<_>>().join("  "));
+    let db = |x: f64| if x.is_finite() { format!("{x:.2} dBFS") } else { "-".into() };
+    let limited = if s.limited.is_finite() { format!("{:.3} % of samples{}", 100.0 * s.limited, if s.limited > MAX_LIMITED { " (LIMITED: over 5 %, the figures are of a voice the limiter has reshaped)" } else { "" }) } else { "- (not rendered here)".into() };
+    println!("  not scored: level {} over stressed vowels, {} over the speech; limiter on {limited}", db(s.level_db), db(s.speech_db));
     if worst > 0 {
         println!("  worst terms (cost: value against centre ± unit):");
         for t in s.worst(worst) {
@@ -1469,6 +1540,9 @@ mod tests {
             pitch: Some([-2.0, 2.0, 4.0, pitch, 1.0, -2.0, 0.1]),
             modulation: [-10.0; 3],
             change: [1.0, 3.0],
+            vowel_power: (0.01 * 100.0, 100),
+            speech_power: (0.0025 * 400.0, 400),
+            limited: Some((0, 4000)),
             failed: false,
         }
     }
@@ -1537,6 +1611,19 @@ mod tests {
         bad.push(SentMeas::failed());
         let s = score_values(&r, &defs, &values(&defs, &bad.iter().collect::<Vec<_>>()));
         assert!(s.failed && s.score == WORST && s.groups["timbre"] == WORST);
+        // and no limiter's share: the failed one was not counted
+        assert!(s.limited.is_nan());
+
+        // the level and the limiter's share are pooled over the sentences and cost nothing
+        assert!((centre.level_db + 20.0).abs() < 1e-9 && (centre.speech_db - db(0.0025)).abs() < 1e-9 && centre.limited == 0.0);
+        let mut hot = speaker(-4.0);
+        hot[0].vowel_power = (0.04 * 300.0, 300);
+        hot[1].limited = Some((40, 4000));
+        let s = score_values(&r, &defs, &values(&defs, &hot.iter().collect::<Vec<_>>()));
+        assert!((s.level_db - db((0.04 * 300.0 + 3.0) / 600.0)).abs() < 1e-9 && s.limited == 40.0 / 16000.0);
+        assert!(s.score == 0.0 && !s.failed);
+        let j = s.to_json("synth");
+        assert_eq!((j["limited"].as_f64(), j["levelDb"].as_f64()), (Some(0.0025), Some(s.level_db)));
     }
 
     #[test]
