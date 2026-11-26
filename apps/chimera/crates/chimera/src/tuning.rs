@@ -781,7 +781,9 @@ mod tests {
         let v = serde_json::to_value(Tuning::default()).unwrap();
         let mut all = Vec::new();
         leaves(&v, "", &mut all);
-        let switches: Vec<&String> = all.iter().filter(|p| at(&v, p).unwrap().is_boolean()).collect();
+        // sorted: a JSON object's key order depends on which serde_json features the build has
+        let mut switches: Vec<&String> = all.iter().filter(|p| at(&v, p).unwrap().is_boolean()).collect();
+        switches.sort();
         assert_eq!(switches, ["prosody.clusterAspiration", "prosody.finalStopBreath", "prosody.upstreamLine"]);
         assert!(switches.iter().all(|p| Tuning::field(p).is_none()));
         all.retain(|p| !at(&v, p).unwrap().is_boolean());
